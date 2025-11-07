@@ -48,4 +48,9 @@
     ../bin/[프로그램_이름]
     ```
 
+    현제 빌드 명령어 (계속 업데이트 중)
+    ```bash
+    gcc -I../include main.c ui.c data.c event_handler.c -o inventory_manager -lncursesw -std=c11 -D_XOPEN_SOURCE_EXTENDED=1
+    ```
+
 -----
