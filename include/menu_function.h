@@ -1,8 +1,7 @@
 #ifndef MENU_FUNCTION_H
 #define MENU_FUNCTION_H
 
-#include "ui.h"
-
+#include "include.h"
 
 // 1. 입고 관리 (등록/추가, 삭제, 조회)
 void func_purchase_register();
@@ -35,11 +34,15 @@ void func_category_modify();
 void func_category_query();
 
 // 상품 판매
-void func_sales_input();
-void func_sales_checkout();
+void func_cart_print();
+void func_cart_input();
+void func_cart_delete();
+void func_cart_reset();
+void func_cart_checkout();
 
 // 재사용 가능한 와이드 문자열 입력 함수
 // 성공 시 1, 취소 시 0 반환
 int get_wide_string_input(WINDOW *win, wchar_t *buffer, int max_len);
+int get_wide_string_cart_input(WINDOW *win, wchar_t *buffer, int max_len);
 
 #endif // MENU_FUNCTION_H

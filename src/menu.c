@@ -21,8 +21,11 @@ Menu_Item sub_menu_template[MAX_SUB_MENU_ITEMS] = {
 
 // [추가] 상품 판매 서브 메뉴 정의 (2개 항목)
 Menu_Item sales_sub_menu[MAX_SALES_SUB_ITEMS] = {
-    { L"①  장바구니", 610 },
-    { L"②  결제", 620 }
+    { L"①  장바구니 상품 출력", 610 },
+    { L"②  장바구니 상품 추가", 620 },
+    { L"③  장바구니 상품 삭제", 630 },
+    { L"④  장바구니 초기화", 640 },
+    { L"⑤  결제", 650 }
 };
 
 // 현재 선택 인덱스 초기값

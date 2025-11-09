@@ -1,4 +1,4 @@
-#include "ui.h" // UI 관련 함수 및 전역 변수 선언을 가져옴
+#include "include.h" 
 
 // ======================= Main 함수 =========================
 
@@ -17,6 +17,7 @@ int main() {
     run_main_loop();
 
     // 4. 프로그램 종료 및 메모리 해제
+    free_cart_items(); // 장바구니 메모리 해제
     delete_windows(); // 생성된 모든 Ncurses 창 메모리 해제
     endwin();         // Ncurses 모드 종료 및 터미널 복구
     return 0;         // 프로그램 종료

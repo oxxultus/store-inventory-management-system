@@ -1,5 +1,4 @@
 #include "ui.h"
-#include "menu.h" // 메뉴 데이터 사용을 위해 포함
 
 // 전역 창 포인터 정의 (ui.h에서 extern으로 선언됨)
 WINDOW *title_win = NULL;
@@ -7,6 +6,7 @@ WINDOW *status_win = NULL;
 WINDOW *last_command_win = NULL;
 WINDOW *menu_win = NULL;
 WINDOW *output_win = NULL;
+WINDOW *tooltip_win = NULL;
 WINDOW *command_win = NULL;
 WINDOW *console_win = NULL;
 
@@ -39,7 +39,7 @@ void draw_menu() {
     }
     
     // 메뉴 창을 지우고 테두리를 다시 그림
-    werase(menu_win); 
+    werase(menu_win);
     box(menu_win, 0, 0); 
     
     // 메뉴 타이틀을 동적으로 가져옴
@@ -108,8 +108,9 @@ void delete_windows() {
     if (console_win != NULL) delwin(console_win);
     if (menu_win != NULL) delwin(menu_win);
     if (output_win != NULL) delwin(output_win);
+    if (tooltip_win != NULL) delwin(tooltip_win);
     // 삭제 후 포인터 초기화 (안전성 확보)
-    title_win = console_win = menu_win = output_win = status_win = command_win = last_command_win = NULL;
+    title_win = console_win = menu_win = output_win = status_win = command_win = last_command_win = tooltip_win = NULL;
 }
 
 // 각각의 창을 생성하는 부분 주어진 크기(rows, cols)에 맞춰 모든 창을 새로 생성
@@ -138,13 +139,17 @@ void create_windows(int rows, int cols) {
 
     // 3. 왼쪽 메뉴 및 오른쪽 출력 창 (높이: 중앙 영역)
     menu_win = newwin(content_height, MENU_WIDTH, current_y, 0);
-    output_win = newwin(content_height, output_width, current_y, MENU_WIDTH);
+
+    output_win = newwin(content_height-TOOLTIP_HEIGHT, output_width, current_y, MENU_WIDTH);
     scrollok(output_win, TRUE); // 출력 창 스크롤 활성화
     current_y += content_height;
     
     // 4. 명령 창 (높이 3)
     command_win = newwin(COMMAND_HEIGHT, cols, current_y, 0);
+    // 툴팁 창 (높이 3)
+    tooltip_win = newwin(TOOLTIP_HEIGHT, output_width, current_y-TOOLTIP_HEIGHT, MENU_WIDTH);
     current_y += COMMAND_HEIGHT;
+
 
     // 5. 콘솔/로그 창 (높이 8)
     console_win = newwin(CONSOLE_HEIGHT, cols, current_y, 0);
@@ -182,6 +187,8 @@ void draw_ui(int rows, int cols) {
     box(console_win, 0, 0);
 
     box(output_win, 0, 0);
+
+    box(tooltip_win, 0, 0);
     
     draw_menu(); // 메뉴 창 그리기 (테두리 및 내용 모두 처리)
 
@@ -217,6 +224,7 @@ void draw_ui(int rows, int cols) {
     wnoutrefresh(output_win);
     wnoutrefresh(command_win);
     wnoutrefresh(console_win);
+    wnoutrefresh(tooltip_win);
     doupdate(); 
 }
 

@@ -1,9 +1,10 @@
-#include "ui.h" 
-#include "menu.h"
-#include "menu_function.h"
+#include "include.h" 
 
 // Enter 키를 눌렀을 때 상태를 전환하는 함수
 void handle_enter_key() {
+
+    werase(tooltip_win);
+    wnoutrefresh(tooltip_win);
     
     Program_State old_state = current_state; 
     
@@ -75,8 +76,11 @@ void handle_enter_key() {
             else if (sub_id == 400) { func_category_query(); }
         } 
         else if (current_state == STATE_SUB_SALES) { // 상품 판매 (ID 6)
-            if (sub_id == 610) { func_sales_input(); } // 상품/수량 입력
-            else if (sub_id == 620) { func_sales_checkout(); } // 결제
+            if (sub_id == 610) { func_cart_print(); } // 상품/수량 입력
+            else if (sub_id == 620) { func_cart_input(); } // 상품/수량 입력
+            else if (sub_id == 630) { func_cart_delete(); } // 장바구니 상품 삭제
+            else if (sub_id == 640) { func_cart_reset(); } // 장바구니 초기화
+            else if (sub_id == 650) { func_cart_checkout(); } // 결제
         }
         
         // ---------------------------------------------------------------------
@@ -103,7 +107,6 @@ void handle_enter_key() {
         previous_state = old_state;
     }
 }
-
 
 // 키보드 입력을 받아 메뉴를 이동시키고 기능을 실행하는 로직
 void handle_menu_input(int key) {
@@ -146,6 +149,7 @@ void handle_menu_input(int key) {
                 current_menu_selection = 0;
                 current_max_items = MAX_MAIN_MENU_ITEMS; // 복귀 시 메인 메뉴 개수로 설정
             }
+            werase(tooltip_win);
             werase(output_win);
             werase(command_win);
             break;
@@ -169,7 +173,6 @@ void handle_menu_input(int key) {
         // UI 갱신은 run_main_loop에서 처리합니다.
     }
 }
-
 
 // 메인 루프 함수 구현
 void run_main_loop() {
@@ -210,6 +213,7 @@ void run_main_loop() {
     }
 }
 
+// 사용자 입력 처리
 int get_user_input(WINDOW *win, char *buffer, int maxlen) {
     int ch;
     int index = 0;
