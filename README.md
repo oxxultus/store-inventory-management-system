@@ -51,6 +51,8 @@
     현제 빌드 명령어 (계속 업데이트 중)
     ```bash
     gcc -I../include main.c ui.c data.c event_handler.c -o inventory_manager -lncursesw -std=c11 -D_XOPEN_SOURCE_EXTENDED=1
+
+    gcc -I../include main.c ui.c menu.c event_handler.c menu_function.c line_buffer.c utility.c cart.c -o main -lncursesw
     ```
 
 -----

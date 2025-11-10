@@ -40,9 +40,4 @@ void func_cart_delete();
 void func_cart_reset();
 void func_cart_checkout();
 
-// 재사용 가능한 와이드 문자열 입력 함수
-// 성공 시 1, 취소 시 0 반환
-int get_wide_string_input(WINDOW *win, wchar_t *buffer, int max_len);
-int get_wide_string_cart_input(WINDOW *win, wchar_t *buffer, int max_len);
-
 #endif // MENU_FUNCTION_H

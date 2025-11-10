@@ -116,38 +116,59 @@ void handle_menu_input(int key) {
     int max_items = (current_state == STATE_MAIN_MENU) ? MAX_MAIN_MENU_ITEMS : 
                     (current_state == STATE_SUB_SALES) ? MAX_SALES_SUB_ITEMS : MAX_SUB_MENU_ITEMS;
 
-    
     Program_State old_state = current_state; 
+    
+    // 1. 함수 실행 중 (STATE_FUNCTION_RUNNING)인 경우 ESC, B/b 처리
+    if (current_state == STATE_FUNCTION_RUNNING && (key == 27 || key == 'b' || key == 'B')) {
+        // 함수 실행 상태만 취소하고 이전 상태로 복귀
+        current_state = previous_state; 
+        
+        // UI 초기화 및 상태 복구
+        if (current_state != old_state) {
+            current_menu_selection = 0;
+            // 복귀 시 메인 메뉴 개수로 설정 (또는 previous_state에 맞는 값으로 설정)
+            current_max_items = MAX_MAIN_MENU_ITEMS; 
+        }
+        werase(tooltip_win);
+        werase(output_win);
+        werase(command_win);
+        return; // 다른 switch 로직을 실행하지 않고 복귀
+    }
 
     switch (key) {
         case KEY_UP:
             if (current_state != STATE_FUNCTION_RUNNING) {
-                // 위로 이동 (인덱스 감소):
-                // (인덱스 - 1 + 최대 항목 수) % 최대 항목 수  ==> 음수 순환을 방지하는 표준 방법
+                // 위로 이동 (인덱스 감소)
                 current_menu_selection = (current_menu_selection - 1 + max_items) % max_items;
             }
             break;
         case KEY_DOWN:
             if (current_state != STATE_FUNCTION_RUNNING) {
-                // 아래로 이동 (인덱스 증가):
-                // (인덱스 + 1) % 최대 항목 수
+                // 아래로 이동 (인덱스 증가)
                 current_menu_selection = (current_menu_selection + 1) % max_items;
             }
             break;
         case 10: // Enter 키
             handle_enter_key();
             break;
+            
+        case 27: // ESC 키
         case 'b': // 'B' 키 (뒤로 가기)
         case 'B':
-            if (current_state == STATE_FUNCTION_RUNNING) {
-                current_state = previous_state;
-            } else if (current_state >= STATE_SUB_PURCHASE && current_state <= STATE_SUB_SALES) { // ⭐ STATE_SUB_SALES 포함
+            if (current_state == STATE_MAIN_MENU) {
+                // 🌟 홈 메뉴일 때 ESC/B를 누르면 프로그램 종료
+                program_exit_flag = 1; 
+                return; // 메인 루프 종료를 위해 즉시 반환
+            } 
+            
+            // 서브 메뉴 상태에서 메인 메뉴로 복귀 (뒤로 가기)
+            if (current_state >= STATE_SUB_PURCHASE && current_state <= STATE_SUB_SALES) {
                 current_state = STATE_MAIN_MENU; 
             }
             
             if (current_state != old_state) {
                 current_menu_selection = 0;
-                current_max_items = MAX_MAIN_MENU_ITEMS; // 복귀 시 메인 메뉴 개수로 설정
+                current_max_items = MAX_MAIN_MENU_ITEMS; 
             }
             werase(tooltip_win);
             werase(output_win);
@@ -160,16 +181,19 @@ void handle_menu_input(int key) {
         case KEY_F(3):
         case KEY_F(4):
         case KEY_F(5):
-        case KEY_F(6): // F6 키 처리 추가
+        case KEY_F(6): 
             if (current_state == STATE_MAIN_MENU) {
                 int f_key_index = key - KEY_F(1);
                 current_menu_selection = f_key_index;
                 handle_enter_key();
             }
             break;
+        default:
+            break;
     }
 
-    if (old_selection != current_menu_selection || key == 10 || key == 'b' || key == 'B') {
+    // 상태나 선택이 변경되었을 경우 UI 갱신 필요 신호
+    if (old_selection != current_menu_selection || key == 10 || key == 27 || key == 'b' || key == 'B') {
         // UI 갱신은 run_main_loop에서 처리합니다.
     }
 }
@@ -179,14 +203,25 @@ void run_main_loop() {
     int rows, cols;
     int ch;
 
-    while((ch = getch()) != 27 && program_exit_flag == 0) { 
+    // 수정: ESC(27)를 루프 종료 조건에서 제외하고, 입력으로 처리하도록 함.
+    while(program_exit_flag == 0) { 
+        
+        // 수정: getch()를 루프 내부에서 호출하여 ch에 저장
+        ch = getch(); 
+
+        if (ch == ERR) { // 입력 오류 또는 Nodelay 모드일 경우 (참고용)
+            continue;
+        }
+
         getmaxyx(stdscr, rows, cols); 
         
         switch (ch) {
             case KEY_RESIZE:
                 resize_handler();
                 break;
-                
+            
+            // 🌟 ESC 키(27)를 handle_menu_input으로 전달하여 처리 (추가)
+            case 27: // ESC
             case KEY_UP:
             case KEY_DOWN:
             case 10: // Enter
@@ -198,6 +233,8 @@ void run_main_loop() {
             case KEY_F(4):
             case KEY_F(5):
             case KEY_F(6):
+                
+                // 🌟 handle_menu_input에서 ESC를 받으면 해당 기능만 종료되도록 구현해야 함.
                 handle_menu_input(ch);
                 
                 if (program_exit_flag) {
@@ -212,44 +249,4 @@ void run_main_loop() {
         draw_ui(rows, cols);
     }
 }
-
-// 사용자 입력 처리
-int get_user_input(WINDOW *win, char *buffer, int maxlen) {
-    int ch;
-    int index = 0;
-    
-    // 비차단 모드 시작: 입력이 없으면 즉시 ERR(-1) 반환
-    nodelay(win, TRUE); 
-    curs_set(1); // 커서 보이기
-    echo(); // 입력 내용 화면에 표시
-    
-    werase(win);
-    box(win, 0, 0);
-    mvwaddwstr(win, 1, 1, L"입력 > ");
-    wmove(win, 1, 8); // 입력 시작 위치
-
-    while (1) {
-        ch = wgetch(win);
-        
-        if (ch == 27) { // ESC 키 (ASCII 27) 감지
-            nodelay(win, FALSE); // 비차단 모드 해제
-            curs_set(0); 
-            noecho();
-            return 0; // 취소 (0 반환)
-        } 
-        else if (ch == 10) { // Enter 키 감지 (ASCII 10)
-            buffer[index] = '\0';
-            nodelay(win, FALSE); // 비차단 모드 해제
-            curs_set(0);
-            noecho();
-            return 1; // 완료 (1 반환)
-        }
-        else if (ch != ERR && index < maxlen - 1) {
-            // 일반 문자 입력 처리 (여기에 복잡한 유효성 검사 로직이 들어감)
-            // 현재 Ncurses는 기본적으로 입력 버퍼링을 처리해줌.
-        }
-        
-        // 화면 갱신: 입력 모드에서도 UI가 응답하도록 doupdate 필요
-        doupdate();
-    }
-}
+// 1
