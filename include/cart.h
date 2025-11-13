@@ -25,6 +25,7 @@ void display_cart_items_addinfo();              // 추가된 상품 내역을 �
 void display_cart_items_deleteinfo(int index);  // 삭제된 상품 내역을 표시 장바구니 내역 출력 함수
 int delete_cart_item(int index);                // 장바구니 상품을 삭제하는 함수
 void display_cart_checkout();                   // 장바구니 내역을 바탕으로 결제를 진행하는 함수
-double calculate_total_cart_amount();           // 장바구니 내역에서 총 가격을 계산하는 함수*/
+double calculate_total_cart_amount();           // 장바구니 내역에서 총 가격을 계산하는 함수
+int get_current_cart_quantity(const char *barcode); // 장바구니 배열에서 특정 바코드의 현재 수량을 찾습니다.
 
-#endif // CART_H
+#endif

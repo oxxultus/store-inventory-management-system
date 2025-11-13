@@ -45,4 +45,4 @@ extern int current_max_items;
 // 서브 메뉴 이름 출력을 위한 함수
 const wchar_t *get_current_menu_title();
 
-#endif // MENU_H
+#endif

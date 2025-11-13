@@ -1,0 +1,23 @@
+
+Pro*C/C++: Release 21.0.0.0.0 - Production on 금 11월 14 02:43:15 2025
+Version 21.20.0.0.0
+
+Copyright (c) 1982, 2025, Oracle and/or its affiliates.  All rights reserved.
+
+라인 22, 열 7에 ../include/sql.h 파일에서 오류가 생겼습니다
+    22  #endif
+    22  ......1
+    22  PCC-S-02014, 심볼 "<eof>"를 만났습니다 다음 중 하나가 기대될 때:
+           ; { } , = : ( ) [ ] * ? | & < > + - / % ~ ! . # @ ^ *= /= %=
+           += -= <<= >>= &&= ||= ^= ~= := | & == != <= >= << >> ++ -- ->
+           ... .. <> ** => an identifier, a string, a numeric constant,
+           newline, a sql string, misc. punctuation, newline, define,
+           elif, else, endif, error, if, ifdef, ifndef, include,
+           include_next, line, pragma, _Pragma, undef, exec, sql, begin,
+           end, var, type, oracle, an immediate preprocessor command,
+           a C token, exec sql, exec sql include, exec sql var,
+           exec sql begin, exec sql end, end-exec, exec sql type,
+           exec oracle, exec oracle else, exec oracle endif,
+           exec oracle begin, a sql hint, create, function, package,
+           procedure, trigger, or, replace, a C++ token,
+        심볼이 "newline," 계속하기 위하여 "<eof>"로 치환되었습니다

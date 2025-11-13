@@ -11,6 +11,18 @@ char* trim_whitespace(char *str) {
     return str;
 }
 
+// 숫자로만 구성되어 있는지 확인
+int is_numeric(const char *str) {
+    if (str == NULL || *str == '\0') return 0;
+    while (*str) {
+        if (!isdigit((unsigned char)*str) && *str != '.') { // 소수점 허용
+            return 0;
+        }
+        str++;
+    }
+    return 1;
+}
+
 // 사용자 입력 처리
 int get_user_input(WINDOW *win, char *buffer, int maxlen) {
     int ch;
@@ -285,17 +297,29 @@ int get_wide_string_cart_input(WINDOW *win, wchar_t *buffer, int max_len) {
             // (4) 상품 조회 및 장바구니 추가
             char item_name[50];
             double price_value; // 조회된 가격
+
             
             // TODO: 상품 조회 함수는 바코드 기반으로 이름과 가격을 조회하는 역할을 수행해야 함.
-            // TODO: 먼저 데이터 베이스에 해당 항목이 있는 지 검사 
+            // TODO: 먼저 데이터 베이스에 해당 항목이 있는 지 검사
+            // TODO: 수량을 포함시켜서 테이블에서 같이 수량을 검사 해야함  -> quintity
             // get_product_price 함수는 바코드 문자열을 인수로 받아야 합니다.
-            int result = get_product_price(barcode_str, item_name, &price_value);
+            int result = get_product_price(barcode_str, &quantity, item_name, &price_value);
 
             if (result == 0) { //상품이 없는 경우 0을 반환한다고 가정
                 wscrl(console_win, 1);
                 wmove(console_win, CONSOLE_HEIGHT - 2, 1);
                 if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
                 wprintw(console_win, " [LOG] [상품 판매] [ERROR] 상품 코드(%s)를 찾을 수 없습니다.", barcode_str);
+                if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
+                if (has_colors()) wattron(console_win, COLOR_PAIR(7));
+                box(console_win, 0, 0);
+                if (has_colors()) wattroff(console_win, COLOR_PAIR(7));
+                wnoutrefresh(console_win); // 즉시 갱신
+                goto cleanup;
+            } else if(result == -1){
+                wscrl(console_win, 1);
+                if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
+                mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [ERROR] 남아있는 상품 재고가 부족합니다.");
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
                 if (has_colors()) wattron(console_win, COLOR_PAIR(7));
                 box(console_win, 0, 0);

@@ -52,7 +52,16 @@
     ```bash
     gcc -I../include main.c ui.c data.c event_handler.c -o inventory_manager -lncursesw -std=c11 -D_XOPEN_SOURCE_EXTENDED=1
 
-    gcc -I../include main.c ui.c menu.c event_handler.c menu_function.c line_buffer.c utility.c cart.c -o main -lncursesw
+    gcc -I../include main.c ui.c menu.c event_handler.c menu_function.c line_buffer.c utility.c cart.c sql.c -o main -lncursesw -I$ORACLE_HOME/sdk/include -L$ORACLE_HOME -lclntsh
+
+    # test 파일 빌드 명령어
+    # gcc main.c -o main -I/opt/oracle/instantclient_21_20/sdk/include -L/opt/oracle/instantclient_21_20 -lclntsh
+    gcc main.c -o main -I$ORACLE_HOME/sdk/include -L$ORACLE_HOME -lclntsh
+
+    # 11 13 갱신
+    proc sql.pc include=../include
+    gcc -I../include main.c ui.c menu.c event_handler.c menu_function.c line_buffer.c utility.c cart.c sql.c -o main -lncursesw -I$ORACLE_HOME/sdk/include -L$ORACLE_HOME -lclntsh
+
     ```
 
 -----

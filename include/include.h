@@ -10,7 +10,6 @@
 #include <locale.h>
 #include <wchar.h>
 #include <stdlib.h>
-#include <locale.h>
 #include <wctype.h>
 #include <string.h>
 #include <ctype.h>
@@ -18,12 +17,12 @@
 #include <stdarg.h>
 
 // 프로젝트 내부 헤더 파일
+#include "line_buffer.h"
 #include "menu.h" // 데이터 관련 구조체 및 상수 포함
 #include "cart.h" // 장바구니 관련 구조체 및 함수 포함
 #include "menu_function.h" // 메뉴 기능 함수 포함
 #include "ui.h" // UI 관련 함수 및 전역 변수 포함
 #include "utility.h" // 사용자 설정 유틸리티 함수 포함
-#include "line_buffer.h"
 #include "sql.h"
 
-#endif // INCLUDE_H
+#endif

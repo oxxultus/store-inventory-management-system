@@ -15,5 +15,6 @@ typedef struct {
 void init_buffer(LineBuffer *buffer);
 void add_line(LineBuffer *buffer, const char *format, ...);
 void clear_buffer(LineBuffer *buffer);
+int display_scroll_output(LineBuffer *buffer);
 
-#endif // LINE_BUFFER_H
+#endif

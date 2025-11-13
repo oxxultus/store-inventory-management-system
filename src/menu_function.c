@@ -9,7 +9,10 @@ void func_purchase_register(){
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
     if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
         mvwaddwstr(output_win, 3, 2, L"[상세 입력 양식]");
-        mvwaddwstr(output_win, 4, 2, L"- 바코드, 수량, 입고단가, 카테고리ID를 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
+        mvwaddwstr(output_win, 4, 2, L"- 바코드, 입고수량, 입고단가, 카테고리ID, 상품명칭을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
+        mvwaddwstr(output_win, 5, 2, L"[카테고리ID]");
+        mvwaddwstr(output_win, 6, 2, L"(1:패션/의류) (2:잡화/액세서리) (3:뷰티/화장품) (4:식품/신선) (5:가전/디지털)");
+        mvwaddwstr(output_win, 7, 2, L"(6:가구/인테리어) (7:생활/주방) (8:스포츠/레저) (9:유아/출산) (10:도서/음반/미디어)");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
@@ -51,7 +54,25 @@ void func_purchase_register(){
             mvwaddwstr(output_win, 4, 2, input_buffer_w); 
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 INSERT 로직 추가 후 결과 출력 필요
+        
+        int insert_result=inbound_insert(input_buffer_w);
+        if( insert_result == 0){
+            werase(output_win);
+            werase(tooltip_win);
+
+            wscrl(console_win, 1);
+            wmove(console_win, CONSOLE_HEIGHT - 2, 1);
+            if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 입고 등록 입력이 취소되었습니다.");
+            if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            
+            // 5. UI 최종 갱신
+            wnoutrefresh(output_win);
+            wnoutrefresh(console_win);
+            wnoutrefresh(tooltip_win);
+            doupdate();
+            return;
+        }
 
         // console_win에 성공 로그 출력
         wscrl(console_win, 1);
@@ -131,6 +152,24 @@ void func_purchase_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
         // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
+        int insert_result=inbound_delete(input_buffer_w);
+        if( insert_result == 0){
+            werase(output_win);
+            werase(tooltip_win);
+
+            wscrl(console_win, 1);
+            wmove(console_win, CONSOLE_HEIGHT - 2, 1);
+            if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 삭제가 취소되었습니다.");
+            if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            
+            // 5. UI 최종 갱신
+            wnoutrefresh(output_win);
+            wnoutrefresh(console_win);
+            wnoutrefresh(tooltip_win);
+            doupdate();
+            return;
+        }
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -212,6 +251,24 @@ void func_purchase_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
         // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
+        int insert_result=inbound_modify(input_buffer_w);
+        if( insert_result == 0){
+            werase(output_win);
+            werase(tooltip_win);
+
+            wscrl(console_win, 1);
+            wmove(console_win, CONSOLE_HEIGHT - 2, 1);
+            if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 수정이 취소되었습니다.");
+            if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+            
+            // 5. UI 최종 갱신
+            wnoutrefresh(output_win);
+            wnoutrefresh(console_win);
+            wnoutrefresh(tooltip_win);
+            doupdate();
+            return;
+        }
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -251,8 +308,6 @@ void func_purchase_query(){
         mvwaddwstr(output_win, 5, 6, L"* 을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
         mvwaddwstr(output_win, 6, 2, L"- 특정 값을 찾는 경우: ");
         mvwaddwstr(output_win, 7, 6, L"컬럼명, 검색값 을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
-        mvwaddwstr(output_win, 8, 2, L"- 조건으로 값을 찾는 경우: ");
-        mvwaddwstr(output_win, 9, 6, L"컬럼명, 조건, 조건값 을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
@@ -282,26 +337,37 @@ void func_purchase_query(){
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
-        werase(output_win);
-        if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
-            box(output_win, 0, 0);
-            mvwaddwstr(output_win, 1, 2, L"[입고 조회 결과]");
-        if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
-        if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
-            mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
-        if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
-
-        wscrl(console_win, 1);
-        wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 관리] 입고 조회 트랜잭션 준비 완료: %ls", input_buffer_w);
         wscrl(console_win, 1);
         mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [입고 조회] 데이터베이스 SELECT 로직 실행");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
+        
+        LineBuffer print_buffer; 
+
+        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
+        int select_result=inbound_select(input_buffer_w);
+
+        if(select_result == 0){
+            werase(output_win);
+            if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
+            box(output_win, 0, 0);
+            mvwaddwstr(output_win, 1, 2, L"[입고 조회 실패 결과]");
+            if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
+            if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
+            mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
+            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
+            werase(tooltip_win);
+            // 5. UI 최종 갱신
+            wnoutrefresh(output_win);
+            wnoutrefresh(console_win);
+            wnoutrefresh(tooltip_win);
+            doupdate();
+            return;
+        }
+
+        
         werase(tooltip_win);
     } else {
         // [ESC 로직] 입력 취소
@@ -2069,22 +2135,85 @@ void func_cart_checkout(){
             // 영수증 정보 출력
             display_checkout_items_scroll();
 
-            // TODO: 장바구니의 내용을 자동으로 판매와 판매 상세정보 테이블에 입력하는 로직 필요
+            double grand_total = calculate_total_cart_amount();
+            const char *payment = "CARD"; // 결제 수단
 
+            // 1. SALE 레코드 삽입 및 SALE_NUM 조회
+            char *sale_number_str = insert_sale_record(grand_total, payment);
+
+            ////
+            if (strcmp(sale_number_str, "-1") == 0) {
+                wscrl(console_win, 1);
+                if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); } 
+                    mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [ERROR] 판매 기록 생성 실패. 데이터베이스 추가 작업을 중지합니다.");
+                if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
+            } else {
+                // 3. 생성된 SALE_NUM을 사용하여 SALE_DETAIL 테이블에 개별 항목 삽입
+                
+                char final_sale_num[16]; // SALE_NUM을 안전하게 저장할 버퍼
+                int item_insert_result = 1; // 항목 삽입 성공 여부 플래그
+                
+                // 반환된 SALE_NUM을 안전하게 복사
+                strcpy(final_sale_num, sale_number_str); 
+                
+                // ------------------------------------------------------------
+                // 장바구니 항목 반복 삽입 로직
+                // ------------------------------------------------------------
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    
+                    // 1. 필요한 데이터 추출
+                    const char *barcode = cartitems[i].barcode;
+                    int quantity = cartitems[i].quantity;
+                    double price = cartitems[i].price;
+
+                    // 2. SALE_DETAIL 항목 삽입 및 결과 확인
+                    item_insert_result = insert_sale_detail_item(
+                        final_sale_num, 
+                        barcode, 
+                        quantity, 
+                        price
+                    );
+
+                    if (item_insert_result == -1) { 
+                        // DB 오류 발생 시 (item_insert_result == -1)
+                        // NOTE: insert_sale_detail_item은 내부적으로 ROLLBACK RELEASE를 수행합니다.
+                        
+                        wscrl(console_win, 1);
+                        wmove(console_win,-2, 1);
+                        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); } 
+                            wprintw(console_win, " [LOG] [ERROR] 항목(%s) 삽입 중 DB 오류 발생. 결제 중단.", barcode);
+                        if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD); }
+                        
+                        // 루프 중단
+                        break; 
+                    }
+                }
+                
+                // ------------------------------------------------------------
+                // 최종 로그 출력
+                // ------------------------------------------------------------
+                if (item_insert_result == 1) {
+                    // 모든 항목 삽입 성공 시
+                    wscrl(console_win, 1);
+                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
+                        mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 내역 결제가 완료되었습니다.");
+                    if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
+                    
+                    wscrl(console_win, 1);
+                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
+                        mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 영수증 처리가 성공적으로 저장되었습니다.");
+                    if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
+
+                    if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
+                        box(output_win, 0, 0);
+                        mvwaddwstr(output_win, 1, 2, L"[!] 장바구니 내역 결제가 완료되었습니다.");
+                    if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
+                } 
+                // item_insert_result가 -1인 경우는 위 else 문에서 이미 오류 로그를 출력하고 루프가 중단되었음.
+            }
 
             // 장바구니 내역 초기화
             free_cart_items();
-            
-            // 로그 출력
-            wscrl(console_win, 1);
-            if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); } // 성공 시 더 밝게
-                mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 내역 결제가 완료되었습니다.");
-            if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
-            wscrl(console_win, 1);
-
-            if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); } // 성공 시 더 밝게
-                mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 영수증 처리가 성공적으로 저장되었습니다.");
-            if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
             
         } else { // ESC 또는 'N' 입력 (중단)
             

@@ -304,7 +304,7 @@ exit_loop:
     doupdate(); 
 }
 
-// 장바구니 내역 정보를 출력하는 함수 TODO: 페이지 값이 변경되지 않음
+// 결제 내역 정보를 출력하는 함수 TODO: 페이지 값이 변경되지 않음
 void display_checkout_items_scroll() {
     
     // --- 변수 선언 및 초기화 ---
@@ -865,6 +865,21 @@ double calculate_total_cart_amount() {
     }
     
     return grand_total;
+}
+
+/*
+ * 장바구니 배열에서 특정 바코드의 현재 수량을 찾습니다.
+ * @param barcode: 조회할 바코드 문자열
+ * @return 현재 장바구니에 담긴 해당 상품의 수량. 없으면 0을 반환합니다.
+ */
+int get_current_cart_quantity(const char *barcode) {
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        // strncmp을 사용하여 바코드가 동일한지 확인
+        if (strncmp(cartitems[i].barcode, barcode, sizeof(cartitems[i].barcode)) == 0) {
+            return cartitems[i].quantity;
+        }
+    }
+    return 0; // 장바구니에 없는 경우
 }
 
 // 112

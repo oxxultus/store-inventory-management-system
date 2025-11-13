@@ -40,4 +40,4 @@ void func_cart_delete();
 void func_cart_reset();
 void func_cart_checkout();
 
-#endif // MENU_FUNCTION_H
+#endif

@@ -25,7 +25,7 @@ extern WINDOW *listbar_win;
 #define CONSOLE_HEIGHT 8        // 콘솔 창 높이 (3줄)  
 
 // 함수 프로토타입 선언 (ui.c 구현)
-void initialize_ncurses();
+extern void initialize_ncurses();
 void delete_windows();
 void create_windows(int rows, int cols);
 
@@ -42,4 +42,4 @@ void resize_handler();
 // 메인 루프 함수 프로토타입 (event_handler.c 구현)
 void run_main_loop();
 
-#endif // UI_H
+#endif
