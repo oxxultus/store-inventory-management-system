@@ -178,6 +178,7 @@ void set_window_print(int rows, int cols){
     mvwaddwstr(title_win, 3, 1, L"  █  ▐▌ ▝▜▌▐▌  ▐▌▐▛▀▀▘▐▌ ▝▜▌  █ ▐▌ ▐▌▐▛▀▚▖ ▐▌      ▐▌  ▐▌▐▛▀▜▌▐▌ ▝▜▌▐▛▀▜▌▐▌▝▜▌▐▛▀▀▘▐▌  ▐▌▐▛▀▀▘▐▌ ▝▜▌  █  ");
     mvwaddwstr(title_win, 4, 1, L"▗▄█▄▖▐▌  ▐▌ ▝▚▞▘ ▐▙▄▄▖▐▌  ▐▌  █ ▝▚▄▞▘▐▌ ▐▌ ▐▌      ▐▌  ▐▌▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▝▚▄▞▘▐▙▄▄▖▐▌  ▐▌▐▙▄▄▖▐▌  ▐▌  █  ");
 
+    /*
     if (has_colors()) {wattron(status_win, COLOR_PAIR(4) | A_BOLD); }
     mvwaddwstr(status_win, 1, 2, L"▮▮▯▯▯ ");
     if (has_colors()) {wattroff(status_win, COLOR_PAIR(4) | A_BOLD);}
@@ -193,6 +194,19 @@ void set_window_print(int rows, int cols){
     getmaxyx(listbar_win, listbar_rows, listbar_cols);
     mvwaddwstr(listbar_win, 1, listbar_cols/2-1, L"◀ ▶");
     if (has_colors()) {wattron(listbar_win, COLOR_PAIR(7) | A_BOLD); }
+    */
+    if (has_colors()) {wattron(status_win, COLOR_PAIR(3) | A_BOLD); }
+        box(status_win, 0,0);
+    if (has_colors()) {wattroff(status_win, COLOR_PAIR(3) | A_BOLD);}
+    if (has_colors()) {wattron(status_win, COLOR_PAIR(3) | A_BOLD); }
+        mvwaddwstr(status_win, 1, 2, L"▮▮▮▮▮ ");
+    if (has_colors()) {wattroff(status_win, COLOR_PAIR(3) | A_BOLD);}
+    if (has_colors()) {wattron(status_win, COLOR_PAIR(3) | A_BOLD); }
+        mvwaddwstr(status_win, 1, 8, L"Con");
+    if (has_colors()) {wattroff(status_win, COLOR_PAIR(3) | A_BOLD);}
+    if (has_colors()) {wattron(status_win, COLOR_PAIR(3) | A_BOLD | A_DIM); }
+        mvwaddwstr(status_win, 1, 11, L"necting... ");
+    if (has_colors()) {wattroff(status_win, COLOR_PAIR(3) | A_BOLD | A_DIM);}
 }
 
 void refresh_all_win(){

@@ -7,348 +7,297 @@
 #include <sqlcpr.h>
 #include "sql.h"
 
-// Pro*C 전역 오류 처리 함수
 void sql_error(char *msg){
-    // C 컴파일러 오류를 피하기 위해 함수 내에서 SQLCA 오류 처리를 인라인합니다.
-    EXEC SQL WHENEVER SQLERROR CONTINUE; 
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
 
-    // ncursesw 출력 로직 적용
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-    if (has_colors()) { wattron(console_win, COLOR_PAIR(1) | A_BOLD); } // COLOR_PAIR(1)을 오류 색상으로 가정
-    wprintw(console_win, " [FATAL] Oracle Error during C call: %s", msg);
+    if (has_colors()) { wattron(console_win, COLOR_PAIR(1) | A_BOLD); }
+    wprintw(console_win, " [치명적 오류] C 호출 중 Oracle 오류 발생: %s", msg); 
     if (has_colors()) { wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
 
-    // SQLCA 오류 메시지 출력
     if (sqlca.sqlerrm.sqlerrml > 0) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 1, 1);
         if (has_colors()) { wattron(console_win, COLOR_PAIR(1)); }
-        wprintw(console_win, " [DETAIL] (%.*s)", sqlca.sqlerrm.sqlerrml, sqlca.sqlerrm.sqlerrmc);
+        wprintw(console_win, " [세부 정보] (%.*s)", sqlca.sqlerrm.sqlerrml, sqlca.sqlerrm.sqlerrmc); 
         if (has_colors()) { wattroff(console_win, COLOR_PAIR(1)); }
     }
-    wrefresh(console_win); // 화면 갱신
+    wrefresh(console_win);
 
-    // 오류 발생 시 ROLLBACK하고 연결 해제 (RELEASE 옵션으로)
     EXEC SQL ROLLBACK RELEASE;
+    
     exit(1);
 }
 
-// Pro*C 호스트 변수 선언 영역
 EXEC SQL BEGIN DECLARE SECTION;
-    // C에서 SQL로 전달 및 SQL에서 C로 수신될 변수
-    VARCHAR barcode_hv[21];       // char[20] 바코드
-    VARCHAR dist_id_hv[4];        // char[3] 유통업체 ID
-    VARCHAR prod_id_hv[5];        // char[4] 상품 ID
-    VARCHAR prod_name_hv[101];    // char[100] 상품 명칭
-    VARCHAR cate_id_hv[11];       // char[10] 카테고리 ID
-    
-    // 숫자로 변환된 입고 수량 및 단가 (DB NUMBER 형식에 맞춤)
-    int inb_qty_num_hv;           // char[10] 입고 수량 (NUMBER)
-    float inb_cost_num_hv;        // char[12] 입고 단가 (NUMBER(10,2))
-    
-    // DB ID 생성용 변수
-    VARCHAR inb_id_hv[16];        // char[15] 입고 ID
-    VARCHAR inv_id_hv[16];        // char[15] 재고 ID
+    VARCHAR barcode_hv[21];
+    VARCHAR dist_id_hv[4];
+    VARCHAR prod_id_hv[5];
+    VARCHAR prod_name_hv[101];
+    VARCHAR cate_id_hv[11];
 
-    // DB 조회용 변수
-    int count_hv;                 // COUNT(*) 결과 저장
-    char exist_prod_id_hv[1];     // 상품 존재 여부 확인용
-    
-    // 기존 값 조회 및 날짜 처리를 위해 필요
-    VARCHAR old_prod_id_hv[5];    // 기존 상품 ID
-    VARCHAR old_dist_id_hv[4];    // 기존 유통업체 ID
-    VARCHAR old_cate_id_hv[11];   // 기존 카테고리 ID
-    VARCHAR old_inb_date_hv[9];   // 기존 입고 일자 (YYYYMMDD)
-    int old_inb_qty_num_hv;       // 기존 입고 수량
-    float old_inb_cost_num_hv;    // 기존 입고 단가
+    int inb_qty_num_hv;
+    float inb_cost_num_hv;
 
-    VARCHAR final_inb_date_hv[9]; // 최종 UPDATE에 사용될 날짜
-    
-    // get_product_price 함수를 위해 추가된 변수
-    int current_qty_hv;           // 현재 재고 수량
-    float sell_price_hv;          // 판매 가격 (PRODUCT.SELL_PRICE)
-    int requested_qty_hv;         // 요청 수량 (함수 인자)
-    
-    // DB 접속 정보 (환경에 맞게 수정 필요)
+    VARCHAR inb_id_hv[16];
+    VARCHAR inv_id_hv[16];
+
+    int count_hv;
+    char exist_prod_id_hv[1];
+
+    VARCHAR old_prod_id_hv[5];
+    VARCHAR old_dist_id_hv[4];
+    VARCHAR old_cate_id_hv[11];
+    VARCHAR old_inb_date_hv[9];
+    int old_inb_qty_num_hv;
+    float old_inb_cost_num_hv;
+
+    VARCHAR final_inb_date_hv[9];
+
+    int current_qty_hv;
+    float sell_price_hv;
+    int requested_qty_hv;
+
     char db_user[] = "SYSTEM";
-    char db_pass[] = "epdlxjqpdltmdmddyd"; // 실제 비밀번호로 변경하세요
-    char db_connect_string[] = "XE_DOCKER"; // SID 또는 서비스 이름
-    
-    // PL/SQL의 SYSDATE 값을 문자열로 받기 위한 변수 (필요시)
+    char db_pass[] = "epdlxjqpdltmdmddyd";
+    char db_connect_string[] = "XE_DOCKER";
+
     char sysdate_str[20];
 EXEC SQL END DECLARE SECTION;
 
-// ①  입고 관리 (F1)
-// insert
 int inbound_insert(wchar_t* input_buffer_w) {
-    
+
     char input_buffer_c[512] = {0};
-    char *token_arr[5]; 
+    char *token_arr[5];
     char temp_input[512];
     char *current_token;
     char *saveptr;
     int field_count = 0;
-    int return_status = 0; 
+    int return_status = 0;
 
-    EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle Error during C call");
-    
-    // ------------------------------------------------------------
-    // 1. DB 접속 (함수 시작)
-    // ------------------------------------------------------------
+    EXEC SQL WHENEVER SQLERROR DO sql_error("C 호출 중 Oracle 오류 발생"); 
+
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-    if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); } 
-    wprintw(console_win, " [INFO] Attempting to connect to DB: %s", db_connect_string);
+    if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
+    wprintw(console_win, " [정보] DB 연결 시도 중: %s", db_connect_string);
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
 
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
-    
+
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-    if (has_colors()) {wattron(console_win, COLOR_PAIR(3)); } 
-    wprintw(console_win, " [INFO] DB connection established.");
+    if (has_colors()) {wattron(console_win, COLOR_PAIR(3)); }
+    wprintw(console_win, " [정보] DB 연결 성공.");
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(3)); }
     wrefresh(console_win);
 
-    // ------------------------------------------------------------
-    // 2. 문자열 파싱 및 C 변수 준비
-    // ------------------------------------------------------------
-    
     if (wcstombs(input_buffer_c, input_buffer_w, sizeof(input_buffer_c)) == (size_t)-1) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 입력 오류: 와이드 문자열 변환 실패.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 입력 오류: 와이드 문자열 변환 실패.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
 
     strcpy(temp_input, input_buffer_c);
-    
+
     current_token = strtok_r(temp_input, ",", &saveptr);
     while (current_token != NULL && field_count < 5) {
         token_arr[field_count] = trim_whitespace(current_token);
         field_count++;
         current_token = strtok_r(NULL, ",", &saveptr);
     }
-    
+
     if (field_count != 5) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 입력 오류: 필드 개수 불일치 (%d개).", field_count);
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 입력 오류: 필드 개수 불일치 (%d개).", field_count);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
-    
-    // ------------------------------------------------------------
-    // 3. 입력 값 유효성 검사 (C 레벨)
-    // ------------------------------------------------------------
 
     if (strlen(token_arr[0]) != 7 || !is_numeric(token_arr[0])) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 입력 오류: 바코드는 7자리 숫자여야 합니다.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 입력 오류: 바코드는 7자리 숫자여야 합니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
-    
+
     if (!is_numeric(token_arr[1]) || !is_numeric(token_arr[2])) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 입력 오류: 수량 또는 단가가 숫자가 아닙니다.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 입력 오류: 수량 또는 단가가 숫자가 아닙니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
 
-    // 호스트 변수에 값 설정 및 바코드 분리
     strcpy((char*)barcode_hv.arr, token_arr[0]);
     barcode_hv.len = strlen(token_arr[0]);
-    
-    // 유통업체 ID (DIST_ID) 분리
+
     strncpy((char*)dist_id_hv.arr, token_arr[0], 3);
     dist_id_hv.arr[3] = '\0';
     dist_id_hv.len = 3;
-    
-    // 상품 ID (PROD_ID) 분리
+
     strncpy((char*)prod_id_hv.arr, token_arr[0] + 3, 4);
     prod_id_hv.arr[4] = '\0';
     prod_id_hv.len = 4;
-    
+
     strcpy((char*)cate_id_hv.arr, token_arr[3]);
     cate_id_hv.len = strlen(token_arr[3]);
-    
+
     strcpy((char*)prod_name_hv.arr, token_arr[4]);
     prod_name_hv.len = strlen(token_arr[4]);
-    
+
     inb_qty_num_hv = atoi(token_arr[1]);
     inb_cost_num_hv = atof(token_arr[2]);
 
-    // ------------------------------------------------------------
-    // 4. DB 유효성 검사 및 트랜잭션 로직 (SQL 레벨)
-    // ------------------------------------------------------------
-
-    // A. 유통업체 ID 존재 확인 (SYSTEM.DISTRIBUTOR 테이블 사용)
     count_hv = 0;
     EXEC SQL SELECT COUNT(*) INTO :count_hv FROM SYSTEM.DISTRIBUTOR WHERE DIST_ID = :dist_id_hv;
     if (count_hv == 0) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 유통업체 ID (%.*s)가 존재하지 않습니다.", dist_id_hv.len, dist_id_hv.arr);
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 유통업체 ID (%.*s)가 존재하지 않습니다.", dist_id_hv.len, dist_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
 
-    // B. 카테고리 ID 존재 확인 (SYSTEM.CATEGORY 테이블 사용)
     count_hv = 0;
     EXEC SQL SELECT COUNT(*) INTO :count_hv FROM SYSTEM.CATEGORY WHERE CATE_ID = :cate_id_hv;
     if (count_hv == 0) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); } 
-        wprintw(console_win, " [LOG] [입고 관리] 카테고리 ID (%.*s)가 존재하지 않습니다.", cate_id_hv.len, cate_id_hv.arr);
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
+        wprintw(console_win, " [로그] [입고 관리] 카테고리 ID (%.*s)가 존재하지 않습니다.", cate_id_hv.len, cate_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
 
-    // C. 상품 등록 (PRODUCT)
     count_hv = 0;
     EXEC SQL SELECT COUNT(PROD_ID) INTO :count_hv FROM SYSTEM.PRODUCT WHERE PROD_ID = :prod_id_hv;
 
     if (count_hv == 0) {
         EXEC SQL INSERT INTO SYSTEM.PRODUCT (PROD_ID, CATE_ID, PROD_NAME, BARCODE, SELL_PRICE)
         VALUES (:prod_id_hv, :cate_id_hv, :prod_name_hv, :barcode_hv, :inb_cost_num_hv);
-        
+
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-        wprintw(console_win, " [INFO] 신규 상품 (%.*s)이 PRODUCT 테이블에 등록되었습니다.", prod_id_hv.len, prod_id_hv.arr);
+        wprintw(console_win, " [정보] 신규 상품 (%.*s)이 PRODUCT 테이블에 등록되었습니다.", prod_id_hv.len, prod_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
     }
-    
-    // D. 입고 데이터 추가 (INBOUND)
+
     long next_inb_val;
     EXEC SQL SELECT SYSTEM.INB_ID_SEQ.NEXTVAL INTO :next_inb_val FROM DUAL;
-    
+
     sprintf((char*)inb_id_hv.arr, "%015ld", next_inb_val);
     inb_id_hv.len = strlen((char*)inb_id_hv.arr);
-    
-    // DIST_ID 컬럼 사용
+
     EXEC SQL INSERT INTO SYSTEM.INBOUND (INB_ID, PROD_ID, DIST_ID, CATE_ID, INB_DATE, INB_QTY, INB_COST)
     VALUES (:inb_id_hv, :prod_id_hv, :dist_id_hv, :cate_id_hv, SYSDATE, :inb_qty_num_hv, :inb_cost_num_hv);
 
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-    wprintw(console_win, " [INFO] 입고 레코드 (%.*s)가 INBOUND 테이블에 삽입되었습니다.", inb_id_hv.len, inb_id_hv.arr);
+    wprintw(console_win, " [정보] 입고 레코드 (%.*s)가 INBOUND 테이블에 삽입되었습니다.", inb_id_hv.len, inb_id_hv.arr);
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
 
-    // E. 재고 추가/갱신 (INVENTORY)
-    EXEC SQL UPDATE SYSTEM.INVENTORY 
-        SET CURRENT_QTY = CURRENT_QTY + :inb_qty_num_hv, 
-            LAST_INB_DATE = SYSDATE 
+    EXEC SQL UPDATE SYSTEM.INVENTORY
+        SET CURRENT_QTY = CURRENT_QTY + :inb_qty_num_hv,
+            LAST_INB_DATE = SYSDATE
         WHERE PROD_ID = :prod_id_hv;
-    
+
     if (sqlca.sqlerrd[2] == 0) {
         long next_inv_val;
         EXEC SQL SELECT SYSTEM.INV_ID_SEQ.NEXTVAL INTO :next_inv_val FROM DUAL;
-        
+
         sprintf((char*)inv_id_hv.arr, "%015ld", next_inv_val);
         inv_id_hv.len = strlen((char*)inv_id_hv.arr);
-        
+
         EXEC SQL INSERT INTO SYSTEM.INVENTORY (INV_ID, PROD_ID, CURRENT_QTY, LAST_INB_DATE)
         VALUES (:inv_id_hv, :prod_id_hv, :inb_qty_num_hv, SYSDATE);
-        
+
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-        wprintw(console_win, " [INFO] 신규 재고 레코드 (%.*s)가 INVENTORY 테이블에 삽입되었습니다.", inv_id_hv.len, inv_id_hv.arr);
+        wprintw(console_win, " [정보] 신규 재고 레코드 (%.*s)가 INVENTORY 테이블에 삽입되었습니다.", inv_id_hv.len, inv_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
     } else {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-        wprintw(console_win, " [INFO] 상품 (%.*s)의 기존 재고가 갱신되었습니다.", prod_id_hv.len, prod_id_hv.arr);
+        wprintw(console_win, " [정보] 상품 (%.*s)의 기존 재고가 갱신되었습니다.", prod_id_hv.len, prod_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
     }
-    
-    // ------------------------------------------------------------
-    // 5. 최종 커밋 및 성공 반환 (return_status를 1로 설정)
-    // ------------------------------------------------------------
+
     return_status = 1;
 
 cleanup:
-    
+
     if (return_status == 1) {
-        EXEC SQL COMMIT WORK RELEASE; 
+        EXEC SQL COMMIT WORK RELEASE;
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
-        wprintw(console_win, " [SUCCESS] 트랜잭션 커밋 및 연결 종료. 입고 등록 완료.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
+        wprintw(console_win, " [성공] 트랜잭션 커밋 및 연결 종료. 입고 등록 완료.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
     } else {
-        EXEC SQL ROLLBACK RELEASE; 
+        EXEC SQL ROLLBACK RELEASE;
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 1, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); } 
-        wprintw(console_win, " [ERROR] 트랜잭션 롤백 및 연결 종료. 입고 등록 실패.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); }
+        wprintw(console_win, " [오류] 트랜잭션 롤백 및 연결 종료. 입고 등록 실패.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD); }
     }
-    wrefresh(console_win);
     
+    wrefresh(console_win);
+
     return return_status;
 }
 
 // delete
 int inbound_delete(wchar_t* input_buffer_w) {
-    
+
     char input_buffer_c[512] = {0};
     char *token;
-    int return_status = 0; 
-    int delete_count = 0; // 삭제된 행의 개수 저장용
+    int return_status = 0;
+    int delete_count = 0;
 
-    // DB 오류 발생 시 sql_error 호출
-    EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle Error during C call (DELETE)");
-    // 삭제된 행이 없더라도 오류로 처리하지 않고 계속 진행
-    EXEC SQL WHENEVER NOT FOUND CONTINUE; 
+    EXEC SQL WHENEVER SQLERROR DO sql_error("C 호출 중 Oracle 오류 발생 (삭제)");
 
-    // ------------------------------------------------------------
-    // 1. DB 접속
-    // ------------------------------------------------------------
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-    wprintw(console_win, " [INFO] Attempting to connect to DB: %s", db_connect_string);
+    wprintw(console_win, " [정보] DB 연결 시도 중: %s", db_connect_string);
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
 
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
-    
+
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(3)); }
-    wprintw(console_win, " [INFO] DB connection established.");
+    wprintw(console_win, " [정보] DB 연결 성공."); 
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(3)); }
     wrefresh(console_win);
-
-    // ------------------------------------------------------------
-    // 2. 입력 파싱 (입고 ID 1개만 입력받는다고 가정)
-    // ------------------------------------------------------------
 
     if (wcstombs(input_buffer_c, input_buffer_w, sizeof(input_buffer_c)) == (size_t)-1) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 삭제] 입력 오류: 와이드 문자열 변환 실패.");
+        wprintw(console_win, " [로그] [입고 삭제] 입력 오류: 와이드 문자열 변환 실패.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
@@ -359,262 +308,214 @@ int inbound_delete(wchar_t* input_buffer_w) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 삭제] 입력 오류: 삭제할 입고 ID를 입력하세요.");
+        wprintw(console_win, " [로그] [입고 삭제] 입력 오류: 삭제할 입고 ID를 입력하세요.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
         goto cleanup;
     }
-    
-    // inb_id_hv 호스트 변수에 ID 저장
+
     strcpy((char*)inb_id_hv.arr, token);
     inb_id_hv.len = strlen(token);
 
-    // ------------------------------------------------------------
-    // 3. 입고 (INBOUND) 레코드만 삭제 (재고 수정 로직 없음)
-    // ------------------------------------------------------------
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-    wprintw(console_win, " [INFO] 입고 ID (%.*s) 레코드 삭제 명령 실행...", inb_id_hv.len, inb_id_hv.arr);
+    wprintw(console_win, " [정보] 입고 ID (%.*s) 레코드 삭제 명령 실행...", inb_id_hv.len, inb_id_hv.arr);
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
 
     EXEC SQL DELETE FROM SYSTEM.INBOUND
              WHERE INB_ID = :inb_id_hv;
-             
-    // 삭제된 행의 개수 확인
+
     delete_count = sqlca.sqlerrd[2];
 
     if (delete_count == 0) {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 삭제] 오류: 입고 ID (%.*s)를 찾을 수 없습니다.", 
-                inb_id_hv.len, inb_id_hv.arr);
+        wprintw(console_win, " [로그] [입고 삭제] 오류: 입고 ID (%.*s)를 찾을 수 없습니다.",
+                 inb_id_hv.len, inb_id_hv.arr);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
     } else {
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-        wprintw(console_win, " [INFO] 입고 레코드 %d건이 성공적으로 삭제되었습니다.", delete_count);
+        wprintw(console_win, " [정보] 입고 레코드 %d건이 성공적으로 삭제되었습니다.", delete_count);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
         return_status = 1;
     }
 
     goto cleanup;
 
-// ------------------------------------------------------------
-// 4. 최종 커밋 및 연결 해제
-// ------------------------------------------------------------
 cleanup:
-    // **성공 또는 실패 여부와 관계없이 연결 해제**
-    
+
     if (return_status == 1) {
-        EXEC SQL COMMIT WORK RELEASE; 
+        EXEC SQL COMMIT WORK RELEASE;
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
-        wprintw(console_win, " [SUCCESS] 트랜잭션 커밋 및 연결 종료. 입고 삭제 완료.");
+        wprintw(console_win, " [성공] 트랜잭션 커밋 및 연결 종료. 입고 삭제 완료.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
     } else {
-        EXEC SQL ROLLBACK RELEASE; 
+        EXEC SQL ROLLBACK RELEASE;
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 1, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); }
-        wprintw(console_win, " [ERROR] 트랜잭션 롤백 및 연결 종료. 입고 삭제 실패.");
+        wprintw(console_win, " [오류] 트랜잭션 롤백 및 연결 종료. 입고 삭제 실패.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD); }
     }
-    wrefresh(console_win);
     
+    wrefresh(console_win);
+
     return return_status;
 }
 
 // modify
 int inbound_modify(wchar_t* input_buffer_w) {
-    
+
     char input_buffer_c[512] = {0};
-    // 입고ID, 상품ID, 제조업체ID, 카테고리ID, 입고일자, 입고수량, 입고단가 (총 7개)
-    char *token_arr[7]; 
+    char *token_arr[7];
     char temp_input[512];
     char *current_token;
     char *saveptr;
     int field_count = 0;
-    int return_status = 0; 
-    
-    // DB에서 조회할 기존 값들을 저장할 임시 호스트 변수 (global DECLARE SECTION에 정의되어야 함)
-    // old_prod_id_hv, old_dist_id_hv, old_cate_id_hv, old_inb_date_hv, old_inb_qty_num_hv, old_inb_cost_num_hv
-    // 최종 UPDATE에 사용될 날짜 호스트 변수 (final_inb_date_hv)
+    int return_status = 0;
 
-    EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle Error during C call (MODIFY)");
-    
-    // ------------------------------------------------------------
-    // 1. DB 접속
-    // ------------------------------------------------------------
+    EXEC SQL WHENEVER SQLERROR DO sql_error("C 호출 중 Oracle 오류 발생 (수정)");
+
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-    wprintw(console_win, " [INFO] Attempting to connect to DB: %s", db_connect_string);
+    wprintw(console_win, " [정보] DB 연결 시도 중: %s", db_connect_string);
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
     wrefresh(console_win);
 
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
-    
+
     wscrl(console_win, 1);
     wmove(console_win, CONSOLE_HEIGHT - 2, 1);
     if (has_colors()) {wattron(console_win, COLOR_PAIR(3)); }
-    wprintw(console_win, " [INFO] DB connection established.");
+    wprintw(console_win, " [정보] DB 연결 성공.");
     if (has_colors()) {wattroff(console_win, COLOR_PAIR(3)); }
     wrefresh(console_win);
 
-    // ------------------------------------------------------------
-    // 2. 문자열 파싱 및 입력 유효성 검사 (7개 필드)
-    // ------------------------------------------------------------
     if (wcstombs(input_buffer_c, input_buffer_w, sizeof(input_buffer_c)) == (size_t)-1) {
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 수정] 입력 오류: 와이드 문자열 변환 실패.");
+        wprintw(console_win, " [로그] [입고 수정] 입력 오류: 와이드 문자열 변환 실패.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0; goto cleanup;
     }
 
     strcpy(temp_input, input_buffer_c);
-    
+
     current_token = strtok_r(temp_input, ",", &saveptr);
     while (current_token != NULL && field_count < 7) {
         token_arr[field_count] = trim_whitespace(current_token);
         field_count++;
         current_token = strtok_r(NULL, ",", &saveptr);
     }
-    
+
     if (field_count != 7) {
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 수정] 입력 오류: 필드 개수 불일치 (%d개, 예상 7개).", field_count);
+        wprintw(console_win, " [로그] [입고 수정] 입력 오류: 필드 개수 불일치 (%d개, 예상 7개).", field_count);
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0; goto cleanup;
     }
-    
-    // 입고 ID 설정 (필수)
+
     strcpy((char*)inb_id_hv.arr, token_arr[0]);
     inb_id_hv.len = strlen(token_arr[0]);
-    
-    // ------------------------------------------------------------
-    // 3. 기존 데이터 조회 (UPDATE를 위한 초기값 설정)
-    // ------------------------------------------------------------
-    
-    // [SELECT INTO] 수정할 기존 레코드의 모든 현재 값들을 가져옴
-    // NOTE: old_inb_date_hv에 YYYYMMDD 형식의 문자열로 날짜를 가져옵니다.
+
     EXEC SQL SELECT PROD_ID, DIST_ID, CATE_ID, TO_CHAR(INB_DATE, 'YYYYMMDD'), INB_QTY, INB_COST
     INTO :old_prod_id_hv, :old_dist_id_hv, :old_cate_id_hv, :old_inb_date_hv, :old_inb_qty_num_hv, :old_inb_cost_num_hv
     FROM SYSTEM.INBOUND
     WHERE INB_ID = :inb_id_hv;
 
-    // NOT FOUND 처리
-    if (sqlca.sqlcode == 1403) { // ORA-01403: no data found
+    if (sqlca.sqlcode == 1403) {
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 수정] 오류: 입고 ID (%.*s)를 찾을 수 없습니다.", inb_id_hv.len, inb_id_hv.arr);
+        wprintw(console_win, " [로그] [입고 수정] 오류: 입고 ID (%.*s)를 찾을 수 없습니다.", inb_id_hv.len, inb_id_hv.arr); 
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0; goto cleanup;
     }
 
-    // ------------------------------------------------------------
-    // 4. 입력 값 기반으로 호스트 변수 덮어쓰기 (유효성 검사 포함)
-    // ------------------------------------------------------------
-    
-    int is_actually_updated = 0; 
+    int is_actually_updated = 0;
 
-    // A. 상품 ID (PROD_ID, token_arr[1])
     if (strcmp(token_arr[1], "@") != 0) {
         if (strlen(token_arr[1]) > 4) { return_status = 0; goto cleanup; }
         EXEC SQL SELECT COUNT(*) INTO :count_hv FROM SYSTEM.PRODUCT WHERE PROD_ID = :token_arr[1];
-        if (count_hv == 0) { wprintw(console_win, " [LOG] [입고 수정] 오류: 상품 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; }
-        
+        if (count_hv == 0) { wprintw(console_win, " [로그] [입고 수정] 오류: 상품 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; } 
+
         strcpy((char*)prod_id_hv.arr, token_arr[1]);
         prod_id_hv.len = strlen(token_arr[1]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 기존 값 사용
         strcpy((char*)prod_id_hv.arr, (char*)old_prod_id_hv.arr);
         prod_id_hv.len = old_prod_id_hv.len;
     }
 
-    // B. 유통업체 ID (DIST_ID, token_arr[2])
     if (strcmp(token_arr[2], "@") != 0) {
         EXEC SQL SELECT COUNT(*) INTO :count_hv FROM SYSTEM.DISTRIBUTOR WHERE DIST_ID = :token_arr[2];
-        if (count_hv == 0) { wprintw(console_win, " [LOG] [입고 수정] 오류: 유통업체 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; }
+        if (count_hv == 0) { wprintw(console_win, " [로그] [입고 수정] 오류: 유통업체 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; } 
 
         strcpy((char*)dist_id_hv.arr, token_arr[2]);
         dist_id_hv.len = strlen(token_arr[2]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 기존 값 사용
         strcpy((char*)dist_id_hv.arr, (char*)old_dist_id_hv.arr);
         dist_id_hv.len = old_dist_id_hv.len;
     }
 
-    // C. 카테고리 ID (CATE_ID, token_arr[3])
     if (strcmp(token_arr[3], "@") != 0) {
         EXEC SQL SELECT COUNT(*) INTO :count_hv FROM SYSTEM.CATEGORY WHERE CATE_ID = :token_arr[3];
-        if (count_hv == 0) { wprintw(console_win, " [LOG] [입고 수정] 오류: 카테고리 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; }
+        if (count_hv == 0) { wprintw(console_win, " [로그] [입고 수정] 오류: 카테고리 ID가 DB에 존재하지 않습니다."); return_status = 0; goto cleanup; } 
 
         strcpy((char*)cate_id_hv.arr, token_arr[3]);
         cate_id_hv.len = strlen(token_arr[3]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 기존 값 사용
         strcpy((char*)cate_id_hv.arr, (char*)old_cate_id_hv.arr);
         cate_id_hv.len = old_cate_id_hv.len;
     }
 
-    // D. 입고 일자 (INB_DATE, token_arr[4]) - **오류 해결 지점**
     if (strcmp(token_arr[4], "@") != 0) {
-        // 새 날짜가 입력된 경우, 최종 변수에 새 날짜 저장
         strcpy((char*)final_inb_date_hv.arr, token_arr[4]);
         final_inb_date_hv.len = strlen(token_arr[4]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 조회된 기존 날짜 문자열 사용
         strcpy((char*)final_inb_date_hv.arr, (char*)old_inb_date_hv.arr);
         final_inb_date_hv.len = old_inb_date_hv.len;
     }
 
-    // E. 입고 수량 (INB_QTY, token_arr[5])
     if (strcmp(token_arr[5], "@") != 0) {
-        if (!is_numeric(token_arr[5])) { wprintw(console_win, " [LOG] [입고 수정] 오류: 수량은 숫자여야 합니다."); return_status = 0; goto cleanup; }
+        if (!is_numeric(token_arr[5])) { wprintw(console_win, " [로그] [입고 수정] 오류: 수량은 숫자여야 합니다."); return_status = 0; goto cleanup; } 
         inb_qty_num_hv = atoi(token_arr[5]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 기존 값 사용
         inb_qty_num_hv = old_inb_qty_num_hv;
     }
 
-    // F. 입고 단가 (INB_COST, token_arr[6])
     if (strcmp(token_arr[6], "@") != 0) {
-        if (!is_numeric(token_arr[6])) { wprintw(console_win, " [LOG] [입고 수정] 오류: 단가는 숫자여야 합니다."); return_status = 0; goto cleanup; }
+        if (!is_numeric(token_arr[6])) { wprintw(console_win, " [로그] [입고 수정] 오류: 단가는 숫자여야 합니다."); return_status = 0; goto cleanup; } 
         inb_cost_num_hv = atof(token_arr[6]);
         is_actually_updated = 1;
     } else {
-        // '@'이면 기존 값 사용
         inb_cost_num_hv = old_inb_cost_num_hv;
     }
 
 
-    // ------------------------------------------------------------
-    // 5. 정적 UPDATE 실행
-    // ------------------------------------------------------------
     if (is_actually_updated) {
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(2)); }
-        wprintw(console_win, " [INFO] 입고 (%.*s) 정보 업데이트 실행 중...", inb_id_hv.len, inb_id_hv.arr);
+        wprintw(console_win, " [정보] 입고 (%.*s) 정보 업데이트 실행 중...", inb_id_hv.len, inb_id_hv.arr); 
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(2)); }
 
-        // [UPDATE] 모든 필드를 호스트 변수로 갱신 (새 값 또는 기존 값)
         EXEC SQL UPDATE SYSTEM.INBOUND SET
             PROD_ID = :prod_id_hv,
             DIST_ID = :dist_id_hv,
             CATE_ID = :cate_id_hv,
-            INB_DATE = TO_DATE(:final_inb_date_hv, 'YYYYMMDD'), // 수정된 final_inb_date_hv 사용
+            INB_DATE = TO_DATE(:final_inb_date_hv, 'YYYYMMDD'),
             INB_QTY = :inb_qty_num_hv,
             INB_COST = :inb_cost_num_hv
         WHERE INB_ID = :inb_id_hv;
@@ -622,274 +523,205 @@ int inbound_modify(wchar_t* input_buffer_w) {
         if (sqlca.sqlerrd[2] == 0) {
             wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-            wprintw(console_win, " [LOG] [입고 수정] 오류: 입고 ID (%.*s)를 찾을 수 없습니다 (UPDATE 실패).", inb_id_hv.len, inb_id_hv.arr);
+            wprintw(console_win, " [로그] [입고 수정] 오류: 입고 ID (%.*s)를 찾을 수 없습니다 (UPDATE 실패).", inb_id_hv.len, inb_id_hv.arr); 
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             return_status = 0;
         } else {
             wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
             if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
-            wprintw(console_win, " [SUCCESS] 입고 ID (%.*s) 정보가 성공적으로 수정되었습니다.", inb_id_hv.len, inb_id_hv.arr);
+            wprintw(console_win, " [성공] 입고 ID (%.*s) 정보가 성공적으로 수정되었습니다.", inb_id_hv.len, inb_id_hv.arr); 
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
             return_status = 1;
         }
     } else {
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-        wprintw(console_win, " [LOG] [입고 수정] 오류: 수정할 항목이 없습니다 ('@'만 입력됨).");
+        wprintw(console_win, " [로그] [입고 수정] 오류: 수정할 항목이 없습니다 ('@'만 입력됨)."); 
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         return_status = 0;
     }
 
-// ------------------------------------------------------------
-// 6. 최종 커밋 및 연결 해제
-// ------------------------------------------------------------
 cleanup:
-    
+
     if (return_status == 1) {
-        EXEC SQL COMMIT WORK RELEASE; 
+        EXEC SQL COMMIT WORK RELEASE;
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 1, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
-        wprintw(console_win, " [SUCCESS] 트랜잭션 커밋 및 연결 종료.");
+        wprintw(console_win, " [성공] 트랜잭션 커밋 및 연결 종료."); 
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
     } else {
-        EXEC SQL ROLLBACK RELEASE; 
+        EXEC SQL ROLLBACK RELEASE;
         wscrl(console_win, 1); wmove(console_win, CONSOLE_HEIGHT - 1, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); }
-        wprintw(console_win, " [ERROR] 트랜잭션 롤백 및 연결 종료.");
+        wprintw(console_win, " [오류] 트랜잭션 롤백 및 연결 종료."); 
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD); }
     }
     wrefresh(console_win);
-    
+
     return return_status;
 }
 
 // select
 int inbound_select(wchar_t* input_buffer_w) {
-    
-    // LineBuffer를 사용하지 않고 바로 화면 출력 (스크롤 기능 배제)
-    
-    EXEC SQL WHENEVER SQLERROR DO sql_error("Oracle Error during C call (SELECT)");
+
+    EXEC SQL WHENEVER SQLERROR DO sql_error("C 호출 중 Oracle 오류 발생 (조회)");
     EXEC SQL WHENEVER NOT FOUND GOTO no_data_found;
 
     int return_status = 0;
 
     VARCHAR inb_id_hv[16];
     VARCHAR prod_name_hv[101];
-    VARCHAR dist_name_hv[51]; 
-    VARCHAR cate_name_hv[51]; 
-    VARCHAR inb_date_hv[11]; 
+    VARCHAR dist_name_hv[51];
+    VARCHAR cate_name_hv[51];
+    VARCHAR inb_date_hv[11];
     int inb_qty_hv;
     float inb_cost_hv;
-    
-    // FETCH 루프에서 사용할 로컬 변수
+
     char line[MAX_LINE_LENGTH];
-    
-    // ncursesw 변수
+
     int max_rows, max_cols;
-    int data_rows; 
-    int current_y = 5; // 데이터 출력 시작 Y 위치 (헤더 아래)
-    
-    // ------------------------------------------------------------
-    // 1. DB 접속 및 화면 크기 측정
-    // ------------------------------------------------------------
+    int data_rows;
+    int current_y = 5;
+
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
-    
-    // output_win 윈도우 크기 측정
+
     getmaxyx(output_win, max_rows, max_cols);
-    // 데이터 출력 가능한 실제 행 수 계산 (테두리, 제목, 헤더 5줄 제외)
-    data_rows = max_rows - 5; 
+    data_rows = max_rows - 5;
     if (data_rows <= 0) data_rows = 1;
 
-    // ------------------------------------------------------------
-    // 2. 정적 커서 선언 및 실행 (전체 조회)
-    // ------------------------------------------------------------
-    
-    // 정적 쿼리를 위한 커서 선언
     EXEC SQL DECLARE inbound_cursor CURSOR FOR
-        SELECT 
-            I.INB_ID, P.PROD_NAME, D.DIST_NAME, C.CATE_NAME, 
+        SELECT
+            I.INB_ID, P.PROD_NAME, D.DIST_NAME, C.CATE_NAME,
             TO_CHAR(I.INB_DATE, 'YYYY-MM-DD'), I.INB_QTY, I.INB_COST
-        FROM 
-            SYSTEM.INBOUND I, 
-            SYSTEM.PRODUCT P, 
-            SYSTEM.DISTRIBUTOR D, 
+        FROM
+            SYSTEM.INBOUND I,
+            SYSTEM.PRODUCT P,
+            SYSTEM.DISTRIBUTOR D,
             SYSTEM.CATEGORY C
-        WHERE 
+        WHERE
             I.PROD_ID = P.PROD_ID AND I.DIST_ID = D.DIST_ID AND I.CATE_ID = C.CATE_ID
-        ORDER BY I.INB_ID DESC; 
-        
-    EXEC SQL OPEN inbound_cursor; 
-    
-    // ------------------------------------------------------------
-    // 3. UI 헤더 출력 및 데이터 페치 (화면 크기만큼)
-    // ------------------------------------------------------------
-    
+        ORDER BY I.INB_ID DESC;
+
+    EXEC SQL OPEN inbound_cursor;
+
     werase(output_win);
-    // UI 테두리 및 제목 출력 로직은 생략하고 헤더만 출력합니다.
-    
-    // 고정 헤더 출력 (Y=3, Y=4)
+
     if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD); }
-        // 포맷 너비 재조정 (20s, 25s, 18s)
-        mvwprintw(output_win, 3, 2, "%-20s %-25s %-18s %-15s %-10s %8s %12s", 
-                 "입고ID", "상품명", "유통업체", "카테고리", "입고일자", "수량", "단가"); 
+        mvwprintw(output_win, 3, 2, "%-20s %-25s %-18s %-15s %-10s %8s %12s",
+                  "입고ID", "상품명", "유통업체", "카테고리", "입고일자", "수량", "단가");
         mvwprintw(output_win, 4, 2, "-------------------- ------------------------- ------------------ --------------- ---------- -------- ------------");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD); }
 
-    // 데이터 출력 루프: 화면에 출력 가능한 행 수만큼만 FETCH
     for (int i = 0; i < data_rows; i++) {
-        EXEC SQL FETCH inbound_cursor INTO 
-            :inb_id_hv, :prod_name_hv, :dist_name_hv, :cate_name_hv, 
+        EXEC SQL FETCH inbound_cursor INTO
+            :inb_id_hv, :prod_name_hv, :dist_name_hv, :cate_name_hv,
             :inb_date_hv, :inb_qty_hv, :inb_cost_hv;
-        
-        if (sqlca.sqlcode == 1403) break; // NOT FOUND (데이터 끝)
-        
-        // 널 문자 처리
+
+        if (sqlca.sqlcode == 1403) break;
+
         inb_id_hv.arr[inb_id_hv.len] = '\0';
         prod_name_hv.arr[prod_name_hv.len] = '\0';
         dist_name_hv.arr[dist_name_hv.len] = '\0';
         cate_name_hv.arr[cate_name_hv.len] = '\0';
         inb_date_hv.arr[inb_date_hv.len] = '\0';
 
-        // 데이터 출력 (Y=5부터 시작)
-        // 포맷 너비 재조정
         mvwprintw(output_win, current_y++, 2, "%-20s %-25s %-18s %-15s %-10s %8d %12.2f",
-                 inb_id_hv.arr, prod_name_hv.arr, dist_name_hv.arr, cate_name_hv.arr,
-                 inb_date_hv.arr, inb_qty_hv, inb_cost_hv);
+                  inb_id_hv.arr, prod_name_hv.arr, dist_name_hv.arr, cate_name_hv.arr,
+                  inb_date_hv.arr, inb_qty_hv, inb_cost_hv);
     }
-    
-    // ------------------------------------------------------------
-    // 4. 정리 및 출력 완료
-    // ------------------------------------------------------------
+
     EXEC SQL CLOSE inbound_cursor;
-    
-    if (sqlca.sqlerrd[2] == 0) { // FETCH된 행이 없으면 (초기 데이터 없음)
-        wscrl(output_win, 1); wprintw(output_win, " [INFO] 조회된 입고 내역이 없습니다.");
+
+    if (sqlca.sqlerrd[2] == 0) {
+        wscrl(output_win, 1); wprintw(output_win, " [정보] 조회된 입고 내역이 없습니다.");
         return_status = 0;
     } else {
-        wscrl(output_win, 1); wprintw(output_win, " [INFO] 총 %d건의 입고 내역을 출력했습니다.", sqlca.sqlerrd[2]);
+        wscrl(output_win, 1); wprintw(output_win, " [정보] 총 %d건의 입고 내역을 출력했습니다.", sqlca.sqlerrd[2]);
         return_status = 1;
     }
 
     goto cleanup;
 
-// ------------------------------------------------------------
-// 오류 처리 레이블 및 Cleanup
-// ------------------------------------------------------------
 query_error:
     wscrl(output_win, 1);
-    wprintw(output_win, " [ERROR] 입고 내역 조회 중 DB 오류 발생.");
+    wprintw(output_win, " [오류] 입고 내역 조회 중 DB 오류 발생.");
     wrefresh(output_win);
     return_status = 0;
     goto cleanup;
-    
+
 no_data_found:
-    // FETCH 루프가 break로 종료되었으므로, 성공으로 간주하고 최종 출력을 실행합니다.
-    return_status = 1; 
+    return_status = 1;
     goto cleanup;
 
 cleanup:
-    // DB 연결 종료
     if (return_status == 1) {
-        EXEC SQL COMMIT WORK RELEASE; 
+        EXEC SQL COMMIT WORK RELEASE;
     } else {
         EXEC SQL ROLLBACK RELEASE;
     }
-    
-    // 최종 화면 갱신
-    wrefresh(output_win); 
+
+    wrefresh(output_win);
     return return_status;
 }
 
-/*
- * 바코드를 기반으로 상품 정보와 재고를 조회하고 장바구니 수량을 고려하여 검증합니다.
- * * @param barcode: 조회할 바코드 문자열 (const char*)
- * @param quantity: 판매를 요청한 수량 (int*)
- * @param product_name_out: 조회된 상품 이름을 저장할 버퍼 (char*)
- * @param price_out: 조회된 판매 가격을 저장할 포인터 (double*)
- * @return 1 (상품 존재 및 재고 충분), -1 (재고 부족), 0 (상품 없음 또는 오류)
- */
 int get_product_price(const char *barcode, int *quantity, char *product_name_out, double *price_out) {
 
-    // NOTE: SQLERROR 발생 시 sql_error 함수에서 이미 exit(1)이 호출됩니다.
     EXEC SQL WHENEVER SQLERROR GOTO query_error;
     EXEC SQL WHENEVER NOT FOUND GOTO not_found;
 
     int requested_qty = *quantity;
-    int return_status = 0; // 최종 반환 상태 (0으로 초기화)
-    
-    // 장바구니에 이미 담겨있는 수량 조회 (외부 함수 호출)
+    int return_status = 0;
+
     int current_cart_qty = get_current_cart_quantity(barcode);
-    
-    // 최종적으로 장바구니에 담기게 될 예상 수량
+
     int final_total_qty = current_cart_qty + requested_qty;
-    
-    // ------------------------------------------------------------
-    // 1. DB 접속
-    // ------------------------------------------------------------
+
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
-    
-    // 1. 입력 바코드를 호스트 변수에 설정
+
     if (strlen(barcode) > 20 || requested_qty <= 0) {
         return_status = 0;
         goto cleanup;
     }
-    
-    // 호스트 변수 바인딩 설정
+
     size_t input_len = strlen(barcode);
     strcpy((char*)barcode_hv.arr, barcode);
     barcode_hv.arr[input_len] = '\0';
     barcode_hv.len = (unsigned short)input_len;
 
-    // ------------------------------------------------------------
-    // 2. DB 조회 (PRODUCT와 INVENTORY 조인)
-    // ------------------------------------------------------------
     EXEC SQL SELECT P.PROD_NAME, P.SELL_PRICE, I.CURRENT_QTY
              INTO :prod_name_hv, :sell_price_hv, :current_qty_hv
              FROM SYSTEM.PRODUCT P, SYSTEM.INVENTORY I
              WHERE RTRIM(P.BARCODE) = :barcode_hv
                AND P.PROD_ID = I.PROD_ID;
-             
-    // 3. 최종 재고 수량 검사 (DB 총재고 vs. 장바구니+요청 수량)
+
     if (final_total_qty > current_qty_hv) {
-        return_status = -1; // 재고 부족 (요청한 수량을 담을 수 없음)
+        return_status = -1;
         goto cleanup;
     }
 
-    // 4. 결과 복사 및 반환 준비 (성공)
     strncpy(product_name_out, (char*)prod_name_hv.arr, prod_name_hv.len);
     product_name_out[prod_name_hv.len] = '\0';
     *price_out = (double)sell_price_hv;
-    
-    return_status = 1; // 성공 상태 설정
+
+    return_status = 1;
     goto cleanup;
 
-
-// ------------------------------------------------------------
-// 오류 처리 레이블 (DB 쿼리 실행 실패/NOT FOUND 시 진입)
-// ------------------------------------------------------------
 query_error:
     return_status = 0;
     goto cleanup;
-    
+
 not_found:
-    // NOT FOUND (상품 없음/재고 정보 없음)
     return_status = 0;
     goto cleanup;
 
-
-// ------------------------------------------------------------
-// 5. 최종 정리 및 연결 해제
-// ------------------------------------------------------------
 cleanup:
-    // NOTE: SQLERROR 발생 시 sql_error에서 ROLLBACK RELEASE를 이미 수행하고 exit(1)로 종료되므로,
-    // 이곳은 NOT FOUND나 C 코드 유효성 검사 실패 시에만 도달합니다.
-    
+
     if (return_status == 1) {
-        EXEC SQL COMMIT WORK RELEASE; // 성공 시 커밋 및 연결 해제
+        EXEC SQL COMMIT WORK RELEASE;
     } else {
-        EXEC SQL ROLLBACK RELEASE; // 실패 시 롤백 및 연결 해제
+        EXEC SQL ROLLBACK RELEASE;
     }
-    
+
     return return_status;
 }
 
@@ -901,43 +733,27 @@ char* insert_sale_record(double total_amount, const char *payment_type) {
 
     EXEC SQL WHENEVER SQLERROR GOTO query_error;
     EXEC SQL WHENEVER NOT FOUND GOTO query_error;
-    
-    // SALE_NUM 생성용 호스트 변수 및 정적 반환 버퍼
-    long next_sale_num;
-    static char result_sale_num[16]; // SALE_NUM (VARCHAR2(15)) + 널문자
 
-    // 호스트 변수 설정
+    long next_sale_num;
+    static char result_sale_num[16];
+
     VARCHAR payment_type_hv[11];
     strcpy((char*)payment_type_hv.arr, payment_type);
     payment_type_hv.len = strlen(payment_type);
-    
-    // EMP_ID는 '1'로 고정
+
     VARCHAR emp_id_hv[11];
     strcpy((char*)emp_id_hv.arr, "1");
-    emp_id_hv.len = 1; 
+    emp_id_hv.len = 1;
 
-    // VARCHAR SALE_NUM 호스트 변수
     VARCHAR sale_num_hv[16];
 
-    // ------------------------------------------------------------
-    // 1. DB 접속
-    // ------------------------------------------------------------
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
 
-    // ------------------------------------------------------------
-    // 2. SALE_NUM 시퀀스 값 생성
-    // ------------------------------------------------------------
     EXEC SQL SELECT SYSTEM.SALE_NUM_SEQ.NEXTVAL INTO :next_sale_num FROM DUAL;
-    
-    // ------------------------------------------------------------
-    // 3. SALE_NUM 문자열 포맷 및 INSERT
-    // ------------------------------------------------------------
-    
-    // next_sale_num을 VARCHAR2(15) 문자열로 포맷하여 호스트 변수에 저장
+
     sprintf((char*)sale_num_hv.arr, "%015ld", next_sale_num);
     sale_num_hv.len = strlen((char*)sale_num_hv.arr);
-    
-    // 반환 버퍼에 최종 SALE_NUM 복사
+
     strcpy(result_sale_num, (char*)sale_num_hv.arr);
 
 
@@ -945,13 +761,11 @@ char* insert_sale_record(double total_amount, const char *payment_type) {
     VALUES (:sale_num_hv, SYSDATE, :total_amount, :payment_type_hv, :emp_id_hv);
 
     EXEC SQL COMMIT WORK RELEASE;
-    
-    // 성공 시 문자열 SALE_NUM 반환
+
     return result_sale_num;
 
 query_error:
     EXEC SQL ROLLBACK RELEASE;
-    // 실패 시 문자열 "-1" 반환
     strcpy(result_sale_num, "-1");
     return result_sale_num;
 }
@@ -963,75 +777,56 @@ query_error:
 int insert_sale_detail_item(const char *sale_num, const char *barcode, int quantity, double price) {
 
     EXEC SQL WHENEVER SQLERROR GOTO query_error;
-    EXEC SQL WHENEVER NOT FOUND GOTO query_error; 
+    EXEC SQL WHENEVER NOT FOUND GOTO query_error;
 
-    // SALE_DETAIL_ID 생성용 호스트 변수
     long next_detail_id;
-    
-    // 호스트 변수 설정
-    VARCHAR detail_id_hv[16]; // SALE_DETAIL_ID VARCHAR2(15)
-    VARCHAR sale_num_hv[16];  // SALE_NUM VARCHAR2(15)
-    VARCHAR prod_id_hv[5];    // PROD_ID VARCHAR2(4)
-    double sub_total = (double)quantity * price;
-    
-    // 재고 확인용 변수 (UPDATE 후 재고 상태 확인)
-    int remaining_qty = 0; 
 
-    // ------------------------------------------------------------
-    // 1. DB 접속
-    // ------------------------------------------------------------
+    VARCHAR detail_id_hv[16];
+    VARCHAR sale_num_hv[16];
+    VARCHAR prod_id_hv[5];
+    double sub_total = (double)quantity * price;
+
+    int remaining_qty = 0;
+
     EXEC SQL CONNECT :db_user IDENTIFIED BY :db_pass USING :db_connect_string;
 
-    // ------------------------------------------------------------
-    // 2. ID 생성 및 바코드 변환
-    // ------------------------------------------------------------
     EXEC SQL SELECT SYSTEM.SALE_DETAIL_ID_SEQ.NEXTVAL INTO :next_detail_id FROM DUAL;
-    
+
     sprintf((char*)detail_id_hv.arr, "%015ld", next_detail_id);
     detail_id_hv.len = strlen((char*)detail_id_hv.arr);
 
-    strncpy((char*)prod_id_hv.arr, barcode + 3, 4); 
+    strncpy((char*)prod_id_hv.arr, barcode + 3, 4);
     prod_id_hv.arr[4] = '\0';
     prod_id_hv.len = 4;
-    
+
     strncpy((char*)sale_num_hv.arr, sale_num, 15);
     sale_num_hv.arr[15] = '\0';
     sale_num_hv.len = strlen((char*)sale_num_hv.arr);
 
-    // ------------------------------------------------------------
-    // 3. SALE_DETAIL 테이블에 INSERT (판매 기록)
-    // ------------------------------------------------------------
     EXEC SQL INSERT INTO SYSTEM.SALE_DETAIL (SALE_DETAIL_ID, SALE_NUM, PROD_ID, SALE_QTY, UNIT_PRICE, SUB_TOTAL)
     VALUES (:detail_id_hv, :sale_num_hv, :prod_id_hv, :quantity, :price, :sub_total);
-    
-    // ------------------------------------------------------------
-    // 4. INVENTORY 재고 감소
-    // ------------------------------------------------------------
+
     EXEC SQL UPDATE SYSTEM.INVENTORY
-             SET CURRENT_QTY = CURRENT_QTY - :quantity 
+             SET CURRENT_QTY = CURRENT_QTY - :quantity
              WHERE PROD_ID = :prod_id_hv
-             RETURNING CURRENT_QTY INTO :remaining_qty; // 업데이트 후 남은 재고를 즉시 가져옴
-             
-    // ------------------------------------------------------------
-    // 5. 재고가 0이 되면 해당 행 삭제 (DELETE) ✨
-    // ------------------------------------------------------------
+             RETURNING CURRENT_QTY INTO :remaining_qty;
+
     if (remaining_qty == 0) {
         EXEC SQL DELETE FROM SYSTEM.INVENTORY
                  WHERE PROD_ID = :prod_id_hv;
-        
+
         wscrl(console_win, 1);
-        if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
-        mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 상품 재고가 0 이 되어 재고가 삭제되었습니다.");
+        if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
+        mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [로그] [상품 판매] 상품 재고가 0 이 되어 재고가 삭제되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
         wnoutrefresh(console_win);
     }
 
-    EXEC SQL COMMIT WORK RELEASE; 
+    EXEC SQL COMMIT WORK RELEASE;
 
-    return 1; // 성공 반환
+    return 1;
 
 query_error:
-    EXEC SQL ROLLBACK RELEASE; 
-    return -1; // 실패 반환
+    EXEC SQL ROLLBACK RELEASE;
+    return -1;
 }
-// 1
