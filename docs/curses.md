@@ -1,5 +1,3 @@
-제시해 주신 내용은 **`ncurses.h` 헤더 파일의 내용 전체**입니다. 이 헤더 파일을 분석해보면, 와이드 문자열 함수(`mvwaddwstr`, `mvaddwstr` 등)를 사용할 때 왜 \*\*`_XOPEN_SOURCE_EXTENDED`\*\*와 같은 매크로 정의가 필요한지 명확히 알 수 있습니다.
-
 ## 🔎 `curses.h` 분석 결과: 매크로의 필요성
 
 헤더 파일 내부에는 다음과 같은 조건부 컴파일(Conditional Compilation) 코드가 존재합니다.
