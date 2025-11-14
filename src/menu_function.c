@@ -1,6 +1,5 @@
 #include "menu_function.h"
 
-// 1. 입고 관리 (등록/추가, 삭제, 조회)
 void func_purchase_register(){
     werase(output_win);
     if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
@@ -16,7 +15,6 @@ void func_purchase_register(){
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -28,22 +26,17 @@ void func_purchase_register(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. console_win에 사용법 출력 및 안내
 
-    // 2. [호출] 분리된 입력 함수 호출
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 3. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -51,10 +44,10 @@ void func_purchase_register(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        
+
         int insert_result=inbound_insert(input_buffer_w);
         if( insert_result == 0){
             werase(output_win);
@@ -65,8 +58,7 @@ void func_purchase_register(){
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 입고 등록 입력이 취소되었습니다.");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-            
-            // 5. UI 최종 갱신
+
             wnoutrefresh(output_win);
             wnoutrefresh(console_win);
             wnoutrefresh(tooltip_win);
@@ -74,7 +66,6 @@ void func_purchase_register(){
             return;
         }
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
@@ -84,7 +75,6 @@ void func_purchase_register(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -94,8 +84,7 @@ void func_purchase_register(){
         wprintw(console_win, " [LOG] [입고 관리] 입고 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -114,7 +103,6 @@ void func_purchase_delete(){
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -127,20 +115,17 @@ void func_purchase_delete(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -148,10 +133,9 @@ void func_purchase_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
         int insert_result=inbound_delete(input_buffer_w);
         if( insert_result == 0){
             werase(output_win);
@@ -162,8 +146,7 @@ void func_purchase_delete(){
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 삭제가 취소되었습니다.");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-            
-            // 5. UI 최종 갱신
+
             wnoutrefresh(output_win);
             wnoutrefresh(console_win);
             wnoutrefresh(tooltip_win);
@@ -180,7 +163,6 @@ void func_purchase_delete(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -190,8 +172,7 @@ void func_purchase_delete(){
         wprintw(console_win, " [LOG] [입고 관리] 입고 삭제 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -213,7 +194,6 @@ void func_purchase_modify(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -226,20 +206,17 @@ void func_purchase_modify(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -247,10 +224,9 @@ void func_purchase_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
         int insert_result=inbound_modify(input_buffer_w);
         if( insert_result == 0){
             werase(output_win);
@@ -261,8 +237,7 @@ void func_purchase_modify(){
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             wprintw(console_win, " [LOG] [데이터베이스] 값이 올바르지 않아 수정이 취소되었습니다.");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
-            
-            // 5. UI 최종 갱신
+
             wnoutrefresh(output_win);
             wnoutrefresh(console_win);
             wnoutrefresh(tooltip_win);
@@ -279,7 +254,6 @@ void func_purchase_modify(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -289,8 +263,7 @@ void func_purchase_modify(){
         wprintw(console_win, " [LOG] [입고 관리] 입고 수정 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -311,7 +284,6 @@ void func_purchase_query(){
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -324,16 +296,14 @@ void func_purchase_query(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
@@ -342,10 +312,9 @@ void func_purchase_query(){
         wscrl(console_win, 1);
         mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [입고 조회] 데이터베이스 SELECT 로직 실행");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
-        
-        LineBuffer print_buffer; 
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
+        LineBuffer print_buffer;
+
         int select_result=inbound_select(input_buffer_w);
 
         if(select_result == 0){
@@ -356,10 +325,9 @@ void func_purchase_query(){
             if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
             if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
             if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             werase(tooltip_win);
-            // 5. UI 최종 갱신
             wnoutrefresh(output_win);
             wnoutrefresh(console_win);
             wnoutrefresh(tooltip_win);
@@ -367,10 +335,9 @@ void func_purchase_query(){
             return;
         }
 
-        
+
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -380,15 +347,13 @@ void func_purchase_query(){
         wprintw(console_win, " [LOG] [입고 관리] 입고 조회 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
     doupdate();
 }
 
-// 2. 재고 관리
 void func_inventory_register(){
     werase(output_win);
     if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
@@ -400,9 +365,8 @@ void func_inventory_register(){
         mvwaddwstr(output_win, 4, 2, L"- 상품ID, 현재수량, 최근입고일, 보관위치를 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-     wnoutrefresh(output_win);
+      wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -414,19 +378,17 @@ void func_inventory_register(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
 
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 3. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -434,12 +396,10 @@ void func_inventory_register(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 INSERT 로직 추가 후 결과 출력 필요
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
@@ -449,7 +409,6 @@ void func_inventory_register(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -459,8 +418,7 @@ void func_inventory_register(){
         wprintw(console_win, " [LOG] [재고 관리] 재고 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -478,9 +436,8 @@ void func_inventory_delete(){
         mvwaddwstr(output_win, 5, 2, L"- 아래 입력 창에서 재고ID를 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-     wnoutrefresh(output_win);
+      wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -493,20 +450,17 @@ void func_inventory_delete(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -514,10 +468,9 @@ void func_inventory_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -528,7 +481,6 @@ void func_inventory_delete(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -538,8 +490,7 @@ void func_inventory_delete(){
         wprintw(console_win, " [LOG] [재고 관리] 재고 삭제 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -561,7 +512,6 @@ void func_inventory_modify(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -574,20 +524,17 @@ void func_inventory_modify(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -595,10 +542,9 @@ void func_inventory_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -609,7 +555,6 @@ void func_inventory_modify(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -619,8 +564,7 @@ void func_inventory_modify(){
         wprintw(console_win, " [LOG] [재고 관리] 재고 수정 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -644,7 +588,6 @@ void func_inventory_query(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -657,20 +600,17 @@ void func_inventory_query(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -678,10 +618,9 @@ void func_inventory_query(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -692,7 +631,6 @@ void func_inventory_query(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -702,15 +640,13 @@ void func_inventory_query(){
         wprintw(console_win, " [LOG] [재고 관리] 재고 조회 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(tooltip_win);
     wnoutrefresh(console_win);
     doupdate();
 }
 
-// 3. 상품 관리
 void func_product_register(){
     werase(output_win);
     if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
@@ -725,7 +661,6 @@ void func_product_register(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -737,19 +672,17 @@ void func_product_register(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
 
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 3. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -757,12 +690,10 @@ void func_product_register(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 INSERT 로직 추가 후 결과 출력 필요
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
@@ -772,7 +703,6 @@ void func_product_register(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -782,8 +712,7 @@ void func_product_register(){
         wprintw(console_win, " [LOG] [상품 관리] 상품 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(tooltip_win);
     wnoutrefresh(console_win);
@@ -803,7 +732,6 @@ void func_product_delete(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -816,20 +744,17 @@ void func_product_delete(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -837,10 +762,9 @@ void func_product_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -851,7 +775,6 @@ void func_product_delete(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -861,8 +784,7 @@ void func_product_delete(){
         wprintw(console_win, " [LOG] [상품 관리] 상품 삭제 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -884,7 +806,6 @@ void func_product_modify(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -897,20 +818,17 @@ void func_product_modify(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -918,10 +836,9 @@ void func_product_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -932,7 +849,6 @@ void func_product_modify(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -942,8 +858,7 @@ void func_product_modify(){
         wprintw(console_win, " [LOG] [상품 관리] 상품 수정 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -967,7 +882,6 @@ void func_product_query(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -980,20 +894,17 @@ void func_product_query(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1001,10 +912,9 @@ void func_product_query(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1015,7 +925,6 @@ void func_product_query(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -1025,15 +934,13 @@ void func_product_query(){
         wprintw(console_win, " [LOG] [상품 관리] 상품 조회 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
     doupdate();
 }
 
-// 4. 제조업체 관리
 void func_supplier_register(){
     werase(output_win);
     if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
@@ -1047,7 +954,6 @@ void func_supplier_register(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -1059,22 +965,17 @@ void func_supplier_register(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. console_win에 사용법 출력 및 안내
 
-    // 2. [호출] 분리된 입력 함수 호출
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 3. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1082,12 +983,10 @@ void func_supplier_register(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 INSERT 로직 추가 후 결과 출력 필요
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
@@ -1097,7 +996,6 @@ void func_supplier_register(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -1107,8 +1005,7 @@ void func_supplier_register(){
         wprintw(console_win, " [LOG] [제조업체 관리] 제조업체 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -1128,7 +1025,6 @@ void func_supplier_delete(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -1141,20 +1037,17 @@ void func_supplier_delete(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1162,10 +1055,9 @@ void func_supplier_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1176,7 +1068,6 @@ void func_supplier_delete(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -1186,8 +1077,7 @@ void func_supplier_delete(){
         wprintw(console_win, " [LOG] [제조업체 관리] 제조업체 삭제 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -1209,7 +1099,6 @@ void func_supplier_modify(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -1222,20 +1111,17 @@ void func_supplier_modify(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1243,10 +1129,9 @@ void func_supplier_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1257,7 +1142,6 @@ void func_supplier_modify(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -1267,11 +1151,10 @@ void func_supplier_modify(){
         wprintw(console_win, " [LOG] [제조업체 관리] 제조업체 수정 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
-    wnoutrefresh(tooltip_win);
     wnoutrefresh(console_win);
+    wnoutrefresh(tooltip_win);
     doupdate();
 }
 void func_supplier_query(){
@@ -1292,7 +1175,6 @@ void func_supplier_query(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         int rows, cols;
         box(tooltip_win, 0, 0);
@@ -1305,20 +1187,17 @@ void func_supplier_query(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1326,10 +1205,9 @@ void func_supplier_query(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1340,7 +1218,6 @@ void func_supplier_query(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -1350,15 +1227,13 @@ void func_supplier_query(){
         wprintw(console_win, " [LOG] [제조업체 관리] 제조업체 조회 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
     doupdate();
 }
 
-// 5. 카테고리 관리
 void func_category_register(){
     werase(output_win);
     if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
@@ -1372,7 +1247,6 @@ void func_category_register(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         int rows, cols;
         getmaxyx(tooltip_win, rows, cols);
@@ -1383,22 +1257,17 @@ void func_category_register(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. console_win에 사용법 출력 및 안내
 
-    // 2. [호출] 분리된 입력 함수 호출
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 3. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1406,12 +1275,10 @@ void func_category_register(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 INSERT 로직 추가 후 결과 출력 필요
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
@@ -1421,7 +1288,6 @@ void func_category_register(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(tooltip_win);
         werase(output_win);
 
@@ -1431,8 +1297,7 @@ void func_category_register(){
         wprintw(console_win, " [LOG] [카테고리 관리] 카테고리 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -1452,7 +1317,6 @@ void func_category_delete(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         int rows, cols;
         getmaxyx(tooltip_win, rows, cols);
@@ -1464,20 +1328,17 @@ void func_category_delete(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1485,10 +1346,9 @@ void func_category_delete(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 DELETE 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1499,7 +1359,6 @@ void func_category_delete(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -1509,8 +1368,7 @@ void func_category_delete(){
         wprintw(console_win, " [LOG] [카테고리 관리] 카테고리 삭제 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -1531,7 +1389,6 @@ void func_category_modify(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         int rows, cols;
         getmaxyx(tooltip_win, rows, cols);
@@ -1543,20 +1400,17 @@ void func_category_modify(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1564,10 +1418,9 @@ void func_category_modify(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 MODIFY 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1578,7 +1431,6 @@ void func_category_modify(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -1588,11 +1440,10 @@ void func_category_modify(){
         wprintw(console_win, " [LOG] [카테고리 관리] 제조업체 수정 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
-    wnoutrefresh(tooltip_win);
     wnoutrefresh(console_win);
+    wnoutrefresh(tooltip_win);
     doupdate();
 }
 void func_category_query(){
@@ -1613,7 +1464,6 @@ void func_category_query(){
 
     wnoutrefresh(output_win);
 
-    // ESC 공통 종료 부분
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         int rows, cols;
         getmaxyx(tooltip_win, rows, cols);
@@ -1625,20 +1475,17 @@ void func_category_query(){
     wnoutrefresh(tooltip_win);
 
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 1. 분리된 입력 함수 호출
+
     input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
-    
-    // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
-    box(command_win, 0, 0); 
+    box(command_win, 0, 0);
     wnoutrefresh(command_win);
 
     if (input_success) {
-        // [Enter 로직] 입력 완료 및 output_win 출력
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1646,10 +1493,9 @@ void func_category_query(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"- 입력된 내용:");
-            mvwaddwstr(output_win, 4, 2, input_buffer_w); 
+            mvwaddwstr(output_win, 4, 2, input_buffer_w);
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
-        // TODO: 여기에 실제 데이터베이스 SELECT 로직 추가 후 결과 출력 필요
 
         wscrl(console_win, 1);
         wmove(console_win, CONSOLE_HEIGHT - 2, 1);
@@ -1660,7 +1506,6 @@ void func_category_query(){
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         werase(tooltip_win);
     } else {
-        // [ESC 로직] 입력 취소
         werase(output_win);
         werase(tooltip_win);
 
@@ -1670,24 +1515,22 @@ void func_category_query(){
         wprintw(console_win, " [LOG] [카테고리 관리] 카테고리 조회 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
     doupdate();
 }
 
-// 상품 판매
 void func_cart_print(){
     display_cart_items_scroll();
 }
 void func_cart_input(){
 
-    if (sales_input_flag==1){ // 이미 장바구니에 상품이 추가된 상태에서 재진입 시 안내문구 출력
+    if (sales_input_flag==1){
         display_cart_items_addinfo();
 
-    } else { // 최초 진입 시 안내문구 출력
+    } else {
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -1701,8 +1544,7 @@ void func_cart_input(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     }
     wnoutrefresh(output_win);
-    
-    // ESC 공통 종료 안내 부분
+
     if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
         box(tooltip_win, 0, 0);
         int rows, cols;
@@ -1720,15 +1562,13 @@ void func_cart_input(){
     if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(tooltip_win);
 
-    wchar_t input_buffer_w[256] = {0}; 
+    wchar_t input_buffer_w[256] = {0};
     int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
     int input_success = 0;
-    
-    // 장바구니 상품 입력 함수 호출
+
     g_prev_num_items = NUM_ITEMS;
     input_success = get_wide_string_cart_input(command_win, input_buffer_w, max_len);
-    
-    // command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
     werase(command_win);
     box(command_win, 0, 0);
     wnoutrefresh(command_win);
@@ -1736,7 +1576,6 @@ void func_cart_input(){
     if (input_success) {
         display_cart_items_addinfo();
 
-        // console_win에 성공 로그 출력
         wscrl(console_win, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
         mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니에 상품 추가 완료");
@@ -1752,15 +1591,14 @@ void func_cart_input(){
         wprintw(console_win, " [LOG] [상품 판매] 장바구니 등록 입력이 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
     }
-    
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
     doupdate();
 }
 void func_cart_delete(){
-    
+
     if(sales_input_flag == 1){
 
         werase(output_win);
@@ -1776,7 +1614,6 @@ void func_cart_delete(){
 
         wnoutrefresh(output_win);
 
-        // ESC 공통 종료 부분
         if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
             int rows, cols;
             getmaxyx(tooltip_win, rows, cols);
@@ -1789,22 +1626,20 @@ void func_cart_delete(){
         wnoutrefresh(tooltip_win);
 
 
-        wchar_t input_buffer_w[256] = {0}; 
+        wchar_t input_buffer_w[256] = {0};
         int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
         int input_success = 0;
         int delete_index = -1;
         int index;
-        
-        // 1. 입력 루프 시작
+
         while (1) {
             input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
 
-            if (input_success == 0) { // ESC 등으로 입력을 취소했을 경우
+            if (input_success == 0) {
                 delete_index = -1;
-                break; 
+                break;
             }
 
-            // 3. 와이드 문자열을 일반 문자열 및 정수로 변환
             char mb_buffer[256] = {0};
             if (wcstombs(mb_buffer, input_buffer_w, sizeof(mb_buffer)) == (size_t)-1) {
                 wscrl(console_win, 1);
@@ -1815,14 +1650,9 @@ void func_cart_delete(){
                     box(console_win,0,0);
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(7) | A_BOLD); }
                 wnoutrefresh(console_win);
-                continue; // 재입력
+                continue;
             }
 
-            // 4. 숫자 변환 및 유효성 검사
-            
-            // 문자열이 비어있는지 또는 숫자가 아닌 문자가 포함되어 있는지 검사 (선택적)
-            // 여기서는 간단하게 atoi만 사용하며, 모든 오류는 범위 검사에서 처리한다고 가정
-            
             int index_to_check = atoi(mb_buffer);
 
             if (index_to_check < 0 || index_to_check >= NUM_ITEMS) {
@@ -1835,28 +1665,25 @@ void func_cart_delete(){
                     box(console_win,0,0);
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(7) | A_BOLD); }
                 wnoutrefresh(console_win);
-                continue; // 재입력
+                continue;
             }
 
-            // 5. 유효성 검사 통과: 인덱스 저장 및 루프 탈출
             delete_index = index_to_check;
             break;
         }
-        
-        // 2. command_win 정리 (입력 함수에서 이미 처리되지만 안전을 위해)
+
         werase(command_win);
-        box(command_win, 0, 0); 
+        box(command_win, 0, 0);
         wnoutrefresh(command_win);
 
         if (input_success) {
-            // [Enter 로직] 입력 완료 및 output_win 출력
             display_cart_items_deleteinfo(delete_index);
 
             wscrl(console_win, 1);
             if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
             mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 상품 삭제 로직 실행");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD | A_DIM); }
-            
+
             int result = delete_cart_item(delete_index);
             if(result == 1){
                 wscrl(console_win, 1);
@@ -1872,7 +1699,6 @@ void func_cart_delete(){
 
             werase(tooltip_win);
         } else {
-            // [ESC 로직] 입력 취소
             werase(output_win);
             werase(tooltip_win);
 
@@ -1883,23 +1709,20 @@ void func_cart_delete(){
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         }
     }else{
-        // 로그 출력
         wscrl(console_win, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 삭제 할 장바구니 내역이 존재하지 않습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         wnoutrefresh(console_win);
-                
-        // output_win 피드백
+
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
             mvwaddwstr(output_win, 1, 2, L"[!] 삭제할 장바구니 내역이 존재하지 않습니다.");
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
     }
-    
 
-    // 5. UI 최종 갱신
+
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
     wnoutrefresh(tooltip_win);
@@ -1922,7 +1745,6 @@ void func_cart_reset(){
 
         wnoutrefresh(output_win);
 
-        // ESC 공통 종료 부분
         if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
             int rows, cols;
             getmaxyx(tooltip_win, rows, cols);
@@ -1934,90 +1756,73 @@ void func_cart_reset(){
         if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
         wnoutrefresh(tooltip_win);
 
-        // --- 변수 선언 ---
-        wchar_t input_buffer_w[256] = {0}; 
+        wchar_t input_buffer_w[256] = {0};
         int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
         int input_success = 0;
-        
-        // --- 입력 루프 시작 ---
+
         while (1) {
             input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
 
-            if (input_success == 0) { // ESC 등으로 입력을 취소했을 경우
-                break; 
+            if (input_success == 0) {
+                break;
             }
 
-            // 3. 와이드 문자열을 일반 문자열로 변환
             char mb_buffer[256] = {0};
-            // 최대 4글자(YES, NO)만 받으므로 size를 작게 지정해도 됨.
-            if (wcstombs(mb_buffer, input_buffer_w, sizeof(mb_buffer)) == (size_t)-1) { 
+            if (wcstombs(mb_buffer, input_buffer_w, sizeof(mb_buffer)) == (size_t)-1) {
                 goto log_error_and_continue;
             }
 
-            // 4. 입력 문자열 유효성 검사 (Y/y/YES/yes 확인)
-            
-            // trim_whitespace 함수가 외부에서 정의되어 있다고 가정하고 사용
-            char *trimmed_input = trim_whitespace(mb_buffer); 
-            
-            if (strcmp(trimmed_input, "Y") == 0 || strcmp(trimmed_input, "y") == 0 || 
+            char *trimmed_input = trim_whitespace(mb_buffer);
+
+            if (strcmp(trimmed_input, "Y") == 0 || strcmp(trimmed_input, "y") == 0 ||
                 strcmp(trimmed_input, "YES") == 0 || strcmp(trimmed_input, "yes") == 0) {
-                
-                // 유효성 검사 통과: 초기화 진행
-                input_success = 2; // 진행 플래그 (1:ESC, 2:Y입력)
+
+                input_success = 2;
                 break;
-                
+
             } else if (strcmp(trimmed_input, "N") == 0 || strcmp(trimmed_input, "n") == 0 ||
                     strcmp(trimmed_input, "NO") == 0 || strcmp(trimmed_input, "no") == 0) {
-                
-                // 유효성 검사 통과: 초기화 중단
-                input_success = 0; // 중단은 ESC와 동일하게 0으로 처리하여 루프 탈출
+
+                input_success = 0;
                 break;
-                
+
             } else {
-                // 유효하지 않은 입력
                 log_error_and_continue:
                 wscrl(console_win, 1);
                 if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [초기화] [ERROR] 잘못된 입력입니다. Y 또는 N을 입력하세요.");
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 wnoutrefresh(console_win);
-                continue; // 재입력
+                continue;
             }
         }
-        
-        // 2. command_win 정리
+
         werase(command_win);
-        box(command_win, 0, 0); 
+        box(command_win, 0, 0);
         wnoutrefresh(command_win);
-        
-        // --- 최종 처리 및 결과 출력 ---
-        if (input_success == 2) { // 'Y' 입력 (초기화 진행)
-            
-            free_cart_items(); 
-            
-            // 로그 출력
+
+        if (input_success == 2) {
+
+            free_cart_items();
+
             wscrl(console_win, 1);
-            if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); } // 성공 시 더 밝게
+            if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); }
                 mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [초기화] 장바구니 초기화가 완료되었습니다. (모든 상품 삭제)");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
 
-            // output_win 피드백
             werase(output_win);
             box(output_win, 0, 0);
             if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
                 mvwaddwstr(output_win, 1, 2, L"[!] 장바구니가 초기화되었습니다.");
             if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
-            
-        } else { // ESC 또는 'N' 입력 (중단)
-            
-            // 로그 출력
+
+        } else {
             wscrl(console_win, 1);
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [초기화] 장바구니 초기화가 사용자 요청으로 중단되었습니다.");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             wnoutrefresh(console_win);
-            
-            // output_win 피드백
+
             werase(output_win);
             if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
                 box(output_win, 0, 0);
@@ -2025,14 +1830,12 @@ void func_cart_reset(){
             if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         }
     }else{
-    // 로그 출력
         wscrl(console_win, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [초기화] 초기화 할 장바구니 내역이 존재하지 않습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         wnoutrefresh(console_win);
-                
-        // output_win 피드백
+
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -2040,7 +1843,6 @@ void func_cart_reset(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
     }
 
-    // 공통 정리
     werase(tooltip_win);
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
@@ -2062,7 +1864,6 @@ void func_cart_checkout(){
 
         wnoutrefresh(output_win);
 
-        // ESC 공통 종료 부분
         if (has_colors()) {wattron(tooltip_win, COLOR_PAIR(1) | A_BOLD); }
             int rows, cols;
             getmaxyx(tooltip_win, rows, cols);
@@ -2074,133 +1875,104 @@ void func_cart_checkout(){
         if (has_colors()) {wattroff(tooltip_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
         wnoutrefresh(tooltip_win);
 
-        // --- 변수 선언 ---
-        wchar_t input_buffer_w[256] = {0}; 
+        wchar_t input_buffer_w[256] = {0};
         int max_len = sizeof(input_buffer_w) / sizeof(wchar_t);
         int input_success = 0;
-        
-        // --- 입력 루프 시작 ---
+
         while (1) {
             input_success = get_wide_string_input(command_win, input_buffer_w, max_len);
 
-            if (input_success == 0) { // ESC 등으로 입력을 취소했을 경우
-                break; 
+            if (input_success == 0) {
+                break;
             }
 
-            // 3. 와이드 문자열을 일반 문자열로 변환
             char mb_buffer[256] = {0};
-            // 최대 4글자(YES, NO)만 받으므로 size를 작게 지정해도 됨.
-            if (wcstombs(mb_buffer, input_buffer_w, sizeof(mb_buffer)) == (size_t)-1) { 
+            if (wcstombs(mb_buffer, input_buffer_w, sizeof(mb_buffer)) == (size_t)-1) {
                 goto log_error_and_continue;
             }
 
-            // 4. 입력 문자열 유효성 검사 (Y/y/YES/yes 확인)
-            
-            // trim_whitespace 함수가 외부에서 정의되어 있다고 가정하고 사용
-            char *trimmed_input = trim_whitespace(mb_buffer); 
-            
-            if (strcmp(trimmed_input, "Y") == 0 || strcmp(trimmed_input, "y") == 0 || 
+            char *trimmed_input = trim_whitespace(mb_buffer);
+
+            if (strcmp(trimmed_input, "Y") == 0 || strcmp(trimmed_input, "y") == 0 ||
                 strcmp(trimmed_input, "YES") == 0 || strcmp(trimmed_input, "yes") == 0) {
-                
-                // 유효성 검사 통과: 초기화 진행
-                input_success = 2; // 진행 플래그 (1:ESC, 2:Y입력)
+
+                input_success = 2;
                 break;
-                
+
             } else if (strcmp(trimmed_input, "N") == 0 || strcmp(trimmed_input, "n") == 0 ||
                     strcmp(trimmed_input, "NO") == 0 || strcmp(trimmed_input, "no") == 0) {
-                
-                // 유효성 검사 통과: 초기화 중단
-                input_success = 0; // 중단은 ESC와 동일하게 0으로 처리하여 루프 탈출
+
+                input_success = 0;
                 break;
-                
+
             } else {
-                // 유효하지 않은 입력
                 log_error_and_continue:
                 wscrl(console_win, 1);
                 if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] [ERROR] 잘못된 입력입니다. Y 또는 N을 입력하세요.");
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 wnoutrefresh(console_win);
-                continue; // 재입력
+                continue;
             }
         }
-        
-        // 2. command_win 정리
+
         werase(command_win);
-        box(command_win, 0, 0); 
+        box(command_win, 0, 0);
         wnoutrefresh(command_win);
-        
-        // --- 최종 처리 및 결과 출력 ---
-        if (input_success == 2) { // 'Y' 입력 (결제 진행)
-            // 영수증 정보 출력
+
+        if (input_success == 2) {
             display_checkout_items_scroll();
 
             double grand_total = calculate_total_cart_amount();
-            const char *payment = "CARD"; // 결제 수단
+            const char *payment = "CARD";
 
-            // 1. SALE 레코드 삽입 및 SALE_NUM 조회
             char *sale_number_str = insert_sale_record(grand_total, payment);
 
-            ////
             if (strcmp(sale_number_str, "-1") == 0) {
                 wscrl(console_win, 1);
-                if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); } 
+                if (has_colors()) {wattron(console_win, COLOR_PAIR(1) | A_BOLD); }
                     mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [ERROR] 판매 기록 생성 실패. 데이터베이스 추가 작업을 중지합니다.");
                 if (has_colors()) {wattroff(console_win, COLOR_PAIR(1) | A_BOLD); }
             } else {
-                // 3. 생성된 SALE_NUM을 사용하여 SALE_DETAIL 테이블에 개별 항목 삽입
-                
-                char final_sale_num[16]; // SALE_NUM을 안전하게 저장할 버퍼
-                int item_insert_result = 1; // 항목 삽입 성공 여부 플래그
-                
-                // 반환된 SALE_NUM을 안전하게 복사
-                strcpy(final_sale_num, sale_number_str); 
-                
-                // ------------------------------------------------------------
-                // 장바구니 항목 반복 삽입 로직
-                // ------------------------------------------------------------
+
+                char final_sale_num[16];
+                int item_insert_result = 1;
+
+                strcpy(final_sale_num, sale_number_str);
+
                 for (int i = 0; i < NUM_ITEMS; i++) {
-                    
-                    // 1. 필요한 데이터 추출
+
                     const char *barcode = cartitems[i].barcode;
                     int quantity = cartitems[i].quantity;
                     double price = cartitems[i].price;
 
-                    // 2. SALE_DETAIL 항목 삽입 및 결과 확인
                     item_insert_result = insert_sale_detail_item(
-                        final_sale_num, 
-                        barcode, 
-                        quantity, 
+                        final_sale_num,
+                        barcode,
+                        quantity,
                         price
                     );
 
-                    if (item_insert_result == -1) { 
-                        // DB 오류 발생 시 (item_insert_result == -1)
-                        // NOTE: insert_sale_detail_item은 내부적으로 ROLLBACK RELEASE를 수행합니다.
-                        
+                    if (item_insert_result == -1) {
+
                         wscrl(console_win, 1);
                         wmove(console_win,-2, 1);
-                        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); } 
+                        if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD); }
                             wprintw(console_win, " [LOG] [ERROR] 항목(%s) 삽입 중 DB 오류 발생. 결제 중단.", barcode);
                         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD); }
-                        
-                        // 루프 중단
-                        break; 
+
+                        break;
                     }
                 }
-                
-                // ------------------------------------------------------------
-                // 최종 로그 출력
-                // ------------------------------------------------------------
+
                 if (item_insert_result == 1) {
-                    // 모든 항목 삽입 성공 시
                     wscrl(console_win, 1);
-                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
+                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
                         mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 내역 결제가 완료되었습니다.");
                     if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
-                    
+
                     wscrl(console_win, 1);
-                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); } 
+                    if (has_colors()) {wattron(console_win, COLOR_PAIR(3) | A_BOLD); }
                         mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 영수증 처리가 성공적으로 저장되었습니다.");
                     if (has_colors()) {wattroff(console_win, COLOR_PAIR(3) | A_BOLD); }
 
@@ -2208,23 +1980,18 @@ void func_cart_checkout(){
                         box(output_win, 0, 0);
                         mvwaddwstr(output_win, 1, 2, L"[!] 장바구니 내역 결제가 완료되었습니다.");
                     if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
-                } 
-                // item_insert_result가 -1인 경우는 위 else 문에서 이미 오류 로그를 출력하고 루프가 중단되었음.
+                }
             }
 
-            // 장바구니 내역 초기화
             free_cart_items();
-            
-        } else { // ESC 또는 'N' 입력 (중단)
-            
-            // 로그 출력
+
+        } else {
             wscrl(console_win, 1);
             if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
                 mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 내역 결제가 사용자 요청으로 중단되었습니다.");
             if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             wnoutrefresh(console_win);
-            
-            // output_win 피드백
+
             werase(output_win);
             if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
                 box(output_win, 0, 0);
@@ -2232,14 +1999,12 @@ void func_cart_checkout(){
             if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         }
     }else{
-        // 장바구니에 상품이 없는 경우
         wscrl(console_win, 1);
         if (has_colors()) {wattron(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
             mvwaddwstr(console_win, CONSOLE_HEIGHT - 2, 1, L" [LOG] [상품 판매] 장바구니 내역 결제가 취소되었습니다.");
         if (has_colors()) {wattroff(console_win, COLOR_PAIR(4) | A_BOLD | A_DIM); }
         wnoutrefresh(console_win);
-                
-        // output_win 피드백
+
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
@@ -2247,11 +2012,7 @@ void func_cart_checkout(){
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
     }
 
-    // 공통 정리
     werase(tooltip_win);
     wnoutrefresh(output_win);
     wnoutrefresh(console_win);
 }
-
-
-// 1
