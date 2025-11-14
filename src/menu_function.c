@@ -278,9 +278,7 @@ void func_purchase_query(){
     if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
         mvwaddwstr(output_win, 3, 2, L"[상세 입력 양식]");
         mvwaddwstr(output_win, 4, 2, L"- 전체 조회를 원할 경우:");
-        mvwaddwstr(output_win, 5, 6, L"* 을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
-        mvwaddwstr(output_win, 6, 2, L"- 특정 값을 찾는 경우: ");
-        mvwaddwstr(output_win, 7, 6, L"컬럼명, 검색값 을 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
+        mvwaddwstr(output_win, 5, 6, L" 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
     if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
     wnoutrefresh(output_win);
 
@@ -1604,11 +1602,11 @@ void func_cart_delete(){
         werase(output_win);
         if (has_colors()) {wattron(output_win, COLOR_PAIR(1) | A_BOLD); }
             box(output_win, 0, 0);
-            mvwaddwstr(output_win, 1, 2, L"[!] 장바구니 내여 삭제를 진행중입니다...");
+            mvwaddwstr(output_win, 1, 2, L"[!] 장바구니 내역 삭제를 진행중입니다...");
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(1) | A_BOLD); }
         if (has_colors()) {wattron(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
             mvwaddwstr(output_win, 3, 2, L"[상세 입력 양식]");
-            mvwaddwstr(output_win, 4, 2, L"- 장바구니 내의 INDEX를 입력받아 해당 카테고리 기록을 삭제합니다.");
+            mvwaddwstr(output_win, 4, 2, L"- 장바구니 내의 INDEX를 입력받아 해당 장바구니 기록을 삭제합니다.");
             mvwaddwstr(output_win, 5, 2, L"- 아래 입력 창에서 INDEX를 입력하고 🅴 🅽 🆃 🅴 🆁 를 누르세요.");
         if (has_colors()) {wattroff(output_win, COLOR_PAIR(7) | A_BOLD | A_DIM); }
 
